@@ -1,5 +1,7 @@
 from django.db import models
 
+MAX_TAG_LENGTH = 20
+
 class Survey(models.Model):
     """
     The root of each survey
@@ -27,7 +29,7 @@ class TagChoice(models.Model):
     """
     A tag that the survey owner can use to tag responses in the survey 
     """
-    tag_text = models.CharField(max_length=20)
+    tag_text = models.CharField(max_length=MAX_TAG_LENGTH)
     survey = models.ForeignKey(Survey, related_name='tag_options')
 
     def __str__(self):
@@ -54,4 +56,4 @@ class Tag(models.Model):
     A single tag attached to a single answer
     """
     answer = models.ForeignKey(Answer, related_name='tags')
-    tag_id = models.IntegerField()
+    text = models.CharField(max_length=MAX_TAG_LENGTH)
