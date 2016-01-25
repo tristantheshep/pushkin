@@ -33,7 +33,7 @@ class SurveySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     questions = QuestionSerializer(many=True)
     tag_options = TagChoiceSerializer(many=True)
-    responses = SurveyResponseSerializer(many=True)
+#   responses = SurveyResponseSerializer(many=True)
 
     def create(self, validated_data):
         """
