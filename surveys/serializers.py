@@ -1,49 +1,32 @@
 from rest_framework import serializers
-from surveys.models import Survey, TagChoice, Question, Tag
+from surveys.models import Survey, SurveyResponse, TagChoice, Question, Answer, Tag
 
-class TagChoiceSerializer(serializers.Serializer):
-    tag_text = serializers.CharField(max_length=100)
+class TagChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TagChoice
+        fields = ('tag_text',)
 
-    def create(self, validated_data):
-        """
-        Create a new tag from validated data
-        """
-        return TagChoice.objects.create(**validated_data)
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('tag_text',)
 
-    def update(self, validated_data):
-        instance.tag_text = validated_data.get('tag_text', instance.tag_text)
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ('answer_text, tags')
+        read_only_fields = ('answer_text')
 
-class TagSerializer(serializers.Serializer):
-    tag_choice = TagChoiceSerializer()
+class SurveyResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SurveyResponse
+        fields = ('answers',)
+        read_only_fields = ('answers')
 
-    def create(self, validated_data):
-        """
-        Add a tag to a question
-        """
-        return Tag.objects.create(**validated_data)
-
-class AnswerSerializer(serializers.Serializer):
-    answer_text = serializers.CharField(max_length=500)
-    tags = TagSerializer(many=True)
-
-    # Note - create/update ommitted intentionally.
-
-class SurveyResponseSerializer(serializers.Serializer):
-    answers = AnswerSerializer(many=True)
-    
-    # Note - create/update ommitted intentionally.
-
-class QuestionSerializer(serializers.Serializer):
-    question_text = serializers.CharField(max_length=100)
-
-    def create(self, validated_data):
-        """
-        Create and return a new `Question` instance from validated data
-        """
-        return Question.objects.create(**validated_data)
-
-    # Note - update() method intentionally left out.
-
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ('question_text',)        
 
 class SurveySerializer(serializers.Serializer):
     pk = serializers.IntegerField(read_only=True)
