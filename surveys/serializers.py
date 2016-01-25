@@ -23,7 +23,7 @@ class TagSerializer(serializers.Serializer):
         return Tag.objects.create(**validated_data)
 
 class AnswerSerializer(serializers.Serializer):
-    text_answer = serializers.CharField(max_length=500)
+    answer_text = serializers.CharField(max_length=500)
     tags = TagSerializer(many=True)
 
     # Note - create/update ommitted intentionally.

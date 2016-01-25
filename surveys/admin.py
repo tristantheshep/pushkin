@@ -4,29 +4,30 @@ from .models import Survey, Question, TagChoice, SurveyResponse, Answer
 from django.forms import TextInput, Textarea
 from django.db import models
 
-class BaseDefaults:
-    readonly_fields=('id',)
-    extra = 0
-
-class QuestionInline(admin.TabularInline, BaseDefaults):
+class QuestionInline(admin.TabularInline):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows':1, 'columns':80})},
     }
+    readonly_fields=('id',)
+    extra = 0
     model = Question
 
-class TagChoiceInline(admin.TabularInline, BaseDefaults):
+class TagChoiceInline(admin.TabularInline):
+
+    readonly_fields=('id',)
+    extra = 0
     model = TagChoice
 
-class AnswerInline(admin.TabularInline, BaseDefaults):
+class AnswerInline(admin.TabularInline):
     model = Answer
 
-class SurveyReponseInline(admin.TabularInline, BaseDefaults):
+class SurveyReponseInline(admin.TabularInline):
     model = SurveyResponse
     inlines = [
         AnswerInline,
     ]
 
-class SurveyAdmin(admin.ModelAdmin, BaseDefaults):
+class SurveyAdmin(admin.ModelAdmin):
     search_fields = ['name']
     inlines = [
         QuestionInline,
@@ -35,4 +36,3 @@ class SurveyAdmin(admin.ModelAdmin, BaseDefaults):
 
 
 admin.site.register(Survey, SurveyAdmin)
-#admin.site.register(Question, QuestionAdmin)

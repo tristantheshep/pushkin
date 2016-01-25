@@ -20,12 +20,18 @@ class Question(models.Model):
     survey = models.ForeignKey(Survey, related_name='questions')
     question_text = models.TextField()
 
+    def __str__(self):
+        return self.question_text
+
 class TagChoice(models.Model):
     """
     A tag that the survey owner can use to tag responses in the survey 
     """
     tag_text = models.CharField(max_length=20)
     survey = models.ForeignKey(Survey, related_name='tag_options')
+
+    def __str__(self):
+        return self.tag_text
 
 class SurveyResponse(models.Model):
     """
@@ -40,8 +46,12 @@ class Answer(models.Model):
     response = models.ForeignKey(SurveyResponse, related_name='answers')
     answer_text = models.TextField()
 
+    def __str__(self):
+        return self.answer_text[:10] + "..."
+
 class Tag(models.Model):
     """
     A single tag attached to a single answer
     """
     answer = models.ForeignKey(Answer, related_name='tags')
+    tag_id = models.IntegerField()
