@@ -8,6 +8,7 @@ class Survey(models.Model):
     """
     name = models.CharField(max_length=101)
     created = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey('auth.user', related_name='surveys')
     
     class Meta:
         ordering = ('created',)
