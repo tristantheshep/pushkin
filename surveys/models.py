@@ -8,7 +8,7 @@ class Survey(models.Model):
     """
     name = models.CharField(max_length=101)
     created = models.DateTimeField(auto_now_add=True)
-    owner = models.ForeignKey('auth.user', related_name='surveys')
+    owner = models.ForeignKey('auth.User', related_name='surveys')
     
     class Meta:
         ordering = ('created',)
@@ -26,7 +26,7 @@ class Question(models.Model):
     def __str__(self):
         return self.question_text
 
-class TagChoice(models.Model):
+class Tag(models.Model):
     """
     A tag that the survey owner can use to tag responses in the survey 
     """
@@ -42,19 +42,19 @@ class SurveyResponse(models.Model):
     """
     survey = models.ForeignKey(Survey, related_name='responses')
 
+    def save(self, *args, **kwargs):
+        super(SurveyResponse, self).save(*args, **kwargs)
+        for question in self.survey.questions.all():
+            self.answers.create(question_id=question.id)
+
 class Answer(models.Model):
     """
     A single answer to a question that comprises the survey
     """
     response = models.ForeignKey(SurveyResponse, related_name='answers')
+    question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField()
+    tags = models.ManyToManyField(Tag)
 
     def __str__(self):
         return self.answer_text[:10] + "..."
-
-class Tag(models.Model):
-    """
-    A single tag attached to a single answer
-    """
-    answer = models.ForeignKey(Answer, related_name='tags')
-    text = models.CharField(max_length=MAX_TAG_LENGTH)

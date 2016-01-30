@@ -15,21 +15,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Answer',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
                 ('answer_text', models.TextField()),
             ],
         ),
         migrations.CreateModel(
             name='Question',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
                 ('question_text', models.TextField()),
             ],
         ),
         migrations.CreateModel(
             name='Survey',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
                 ('name', models.CharField(max_length=101)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('owner', models.ForeignKey(related_name='surveys', to=settings.AUTH_USER_MODEL)),
@@ -41,22 +41,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SurveyResponse',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
                 ('survey', models.ForeignKey(related_name='responses', to='surveys.Survey')),
             ],
         ),
         migrations.CreateModel(
             name='Tag',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(max_length=20)),
-                ('answer', models.ForeignKey(related_name='tags', to='surveys.Answer')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='TagChoice',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(primary_key=True, verbose_name='ID', serialize=False, auto_created=True)),
                 ('tag_text', models.CharField(max_length=20)),
                 ('survey', models.ForeignKey(related_name='tag_options', to='surveys.Survey')),
             ],
@@ -68,7 +60,17 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='answer',
+            name='question',
+            field=models.ForeignKey(related_name='answers', to='surveys.Question'),
+        ),
+        migrations.AddField(
+            model_name='answer',
             name='response',
             field=models.ForeignKey(related_name='answers', to='surveys.SurveyResponse'),
+        ),
+        migrations.AddField(
+            model_name='answer',
+            name='tags',
+            field=models.ManyToManyField(to='surveys.Tag'),
         ),
     ]
