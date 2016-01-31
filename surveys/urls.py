@@ -8,7 +8,7 @@ urlpatterns = [
     url(r'^surveys/$', views.SurveyList.as_view()),
     url(r'^surveys/(?P<pk>[0-9]+)/$', views.SurveyDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/questions/$', views.QuestionList.as_view()),
-    url(r'^surveys/(?P<sid>[0-9]+)/questions/(?P<qid>[0-9]+)$', 
+    url(r'^surveys/(?P<sid>[0-9]+)/questions/(?P<pk>[0-9]+)$', 
             views.QuestionDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/responses/$', 
             views.SurveyResponseList.as_view()),
