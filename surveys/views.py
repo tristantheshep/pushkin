@@ -1,9 +1,12 @@
-from surveys.models import Survey, SurveyResponse, Question, Answer
-from surveys.serializers import SurveySerializer, SurveyResponseSerializer, QuestionSerializer, UserSerializer, AnswerSerializer
-from surveys.permissions import IsOwnerOrReadOnly
 
+from surveys.models import Survey, SurveyResponse, Question, Answer, Tag
+from surveys.serializers import SurveySerializer, SurveyResponseSerializer, QuestionSerializer, UserSerializer, AnswerSerializer, TagSerializer
+from surveys.permissions import IsOwner
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import Http404
+from django.shortcuts import redirect
 from rest_framework import generics
 from rest_framework import mixins
 from rest_framework import permissions
@@ -11,31 +14,33 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+
 class SurveyList(generics.ListCreateAPIView):
-    queryset = Survey.objects.all()
     serializer_class = SurveySerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return Survey.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class SurveyDetail(APIView):
 
-    def get_survey(self, pk):
+    def get_survey(self, sid):
         try:
-            return Survey.objects.get(pk=pk)
+            return Survey.objects.get(pk=sid)
         except Survey.DoesNotExist:
             raise Http404
 
-    def get(self, request, pk, format=None):
-        survey = self.get_survey(pk)
+    def get(self, request, sid, format=None):
+        survey = self.get_survey(sid)
         serializer = SurveySerializer(survey)
         return Response(serializer.data)
 
-    def patch(self,  request, pk, format=None):
-
-        survey = self.get_survey(pk)
+    def patch(self, request, sid, format=None):
+        survey = self.get_survey(sid)
         serializer = SurveySerializer(survey, request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -72,7 +77,9 @@ class SurveyResponseDetail(APIView):
         serializer = SurveyResponseSerializer(response)
         return Response(serializer.data)
 
+
 class QuestionList(APIView):
+
     def get(self, request, format=None, sid=None):
         questions = Question.objects.filter(survey_id=sid)
         serializer = QuestionSerializer(questions, many=True)
@@ -86,13 +93,17 @@ class QuestionList(APIView):
            return Response(serializer.data, status=status.HTTP_201_CREATED)
        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class QuestionDetail(APIView):
+
     def get(self, request, format=None, sid=None, qid=None):
         question = Question.objects.get(survey_id=sid, id=qid)
         serializer = QuestionSerializer(question)
         return Response(serializer.data)
 
+
 class AnswerList(APIView):
+
     def get(self, request, sid, rid, format=None):
         answers = Answer.objects.filter(response_id=rid)
         serializer = AnswerSerializer(answers, many=True)
@@ -106,7 +117,9 @@ class AnswerList(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class AnswerDetail(APIView):
+
     def get_answer(self, rid, aid):
         try:
             return Answer.objects.get(response_id=rid, pk=aid)    
@@ -127,10 +140,27 @@ class AnswerDetail(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class TagList(generics.ListCreateAPIView):
+    serializer_class = TagSerializer
+
+    def get_queryset(self):
+        return Tag.objects.filter(survey_id=self.kwargs["sid"])
+
+    def perform_create(self, serializer):
+        if not Tag.objects.filter(tag_text=serializer.validated_data["tag_text"]).exists():
+            serializer.save(survey_id=self.kwargs["sid"])
+
+class TagDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
