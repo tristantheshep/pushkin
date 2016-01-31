@@ -26,27 +26,9 @@ class SurveyList(generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
-class SurveyDetail(APIView):
-
-    def get_survey(self, sid):
-        try:
-            return Survey.objects.get(pk=sid)
-        except Survey.DoesNotExist:
-            raise Http404
-
-    def get(self, request, sid, format=None):
-        survey = self.get_survey(sid)
-        serializer = SurveySerializer(survey)
-        return Response(serializer.data)
-
-    def patch(self, request, sid, format=None):
-        survey = self.get_survey(sid)
-        serializer = SurveySerializer(survey, request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class SurveyDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = SurveySerializer
+    queryset = Survey.objects.all()
 
 
 class SurveyResponseList(generics.ListCreateAPIView):
@@ -58,9 +40,11 @@ class SurveyResponseList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(survey_id=self.kwargs['sid'])
 
+
 class SurveyResponseDetail(generics.RetrieveDestroyAPIView):
     serializer_class = SurveyResponseSerializer
     queryset = SurveyResponse.objects.all()
+
 
 class QuestionList(APIView):
 
