@@ -16,7 +16,7 @@ urlpatterns = [
             views.SurveyResponseDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<rid>[0-9]+)/answers/$', 
             views.AnswerList.as_view()),
-    url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<rid>[0-9]+)/answers/(?P<aid>[0-9]+)$', views.AnswerDetail.as_view()),
+    url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<rid>[0-9]+)/answers/(?P<pk>[0-9]+)$', views.AnswerDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/tags/$', views.TagList.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/tags/(?P<pk>[0-9]+)$',
             views.TagDetail.as_view()),

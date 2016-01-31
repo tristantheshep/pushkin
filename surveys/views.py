@@ -60,44 +60,21 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
     serializer_class = QuestionSerializer
     queryset = Question.objects.all()
 
-
-class AnswerList(APIView):
-
-    def get(self, request, sid, rid, format=None):
-        answers = Answer.objects.filter(response_id=rid)
-        serializer = AnswerSerializer(answers, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, sid, rid, format=None):
-        response = SurveyResponse.objects.get(pk=rid)
-        serializer = AnswerSerializer(data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save(response_id=rid)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # @@@ Question text needs to be put-able only ONCE, by the survey taker
+    #     Only the survey owner can add tags
 
 
-class AnswerDetail(APIView):
+class AnswerList(generics.ListAPIView):
+    serializer_class = AnswerSerializer
+    
+    def get_queryset(self):
+        return Answer.objects.filter(response_id=self.kwargs['rid'])
 
-    def get_answer(self, rid, aid):
-        try:
-            return Answer.objects.get(response_id=rid, pk=aid)    
-        except:
-            raise Http404
 
-    def get(self, request, sid, rid, aid, format=None):
-        answer = self.get_answer(rid, aid)
-        serializer = AnswerSerializer(answer)
-        return Response(serializer.data)
+class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AnswerSerializer
+    queryset = Answer.objects.all()
 
-    def patch(self, request, sid, rid, aid, format=None):
-        answer = self.get_answer(rid, sid)
-        serializer = AnswerSerializer(answer, request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TagList(generics.ListCreateAPIView):
     serializer_class = TagSerializer
