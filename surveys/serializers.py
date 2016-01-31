@@ -18,8 +18,8 @@ class AnswerSerializer(serializers.ModelSerializer):
 class SurveyResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyResponse
-        fields = ('answers',)
-        read_only_fields = ('answers',)
+        fields = ('answers','id')
+        read_only_fields = ('answers','id')
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:

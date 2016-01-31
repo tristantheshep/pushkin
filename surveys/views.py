@@ -49,34 +49,18 @@ class SurveyDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SurveyResponseList(APIView):
+class SurveyResponseList(generics.ListCreateAPIView):
+    serializer_class = SurveyResponseSerializer
 
-    def get(self, request, sid, format=None):
-        responses = SurveyResponse.objects.filter(survey_id=sid)
-        serializer = SurveyResponseSerializer(responses, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        return SurveyResponse.objects.filter(survey_id=self.kwargs['sid'])
 
-    def post(self, request, sid, format=None):
-       serializer = SurveyResponseSerializer(data=request.data)
-       if serializer.is_valid():
-           serializer.save(survey_id=sid)
-           return Response(serializer.data, status=status.HTTP_201_CREATED)
-       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        serializer.save(survey_id=self.kwargs['sid'])
 
- 
-class SurveyResponseDetail(APIView):
-
-    def get_survey_response(self, sid, rid):
-        try:
-            return SurveyResponse.objects.get(survey_id=sid, id=rid)
-        except SurveyResponse.DoesNotExist:
-            raise Http404
-
-    def get(self, request, format=None, sid=None, rid=None):
-        response = self.get_survey_response(sid, rid)
-        serializer = SurveyResponseSerializer(response)
-        return Response(serializer.data)
-
+class SurveyResponseDetail(generics.RetrieveDestroyAPIView):
+    serializer_class = SurveyResponseSerializer
+    queryset = SurveyResponse.objects.all()
 
 class QuestionList(APIView):
 

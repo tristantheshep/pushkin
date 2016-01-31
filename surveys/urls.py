@@ -12,7 +12,7 @@ urlpatterns = [
             views.QuestionDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/responses/$', 
             views.SurveyResponseList.as_view()),
-    url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<rid>[0-9]+)$', 
+    url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<pk>[0-9]+)$', 
             views.SurveyResponseDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/responses/(?P<rid>[0-9]+)/answers/$', 
             views.AnswerList.as_view()),
