@@ -36,14 +36,14 @@ class Tag(models.Model):
     def __str__(self):
         return self.tag_text
 
-class SurveyResponse(models.Model):
+class Response(models.Model):
     """
     A series of answers representing a response to the survey
     """
     survey = models.ForeignKey(Survey, related_name='responses')
 
     def save(self, *args, **kwargs):
-        super(SurveyResponse, self).save(*args, **kwargs)
+        super(Response, self).save(*args, **kwargs)
         for question in self.survey.questions.all():
             self.answers.create(question_id=question.id)
 
@@ -51,7 +51,7 @@ class Answer(models.Model):
     """
     A single answer to a question that comprises the survey
     """
-    response = models.ForeignKey(SurveyResponse, related_name='answers')
+    response = models.ForeignKey(Response, related_name='answers')
     question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField()
     tags = models.ManyToManyField(Tag)

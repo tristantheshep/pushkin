@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Survey, Question, SurveyResponse, Answer
+from .models import Survey, Question, Response, Answer
 from django.forms import TextInput, Textarea
 from django.db import models
 
@@ -15,8 +15,8 @@ class QuestionInline(admin.TabularInline):
 class AnswerInline(admin.TabularInline):
     model = Answer
 
-class SurveyResponseInline(admin.TabularInline):
-    model = SurveyResponse
+class ResponseInline(admin.TabularInline):
+    model = Response
     inlines = [
         AnswerInline,
     ]
@@ -25,7 +25,7 @@ class SurveyAdmin(admin.ModelAdmin):
     search_fields = ['name']
     inlines = [
         QuestionInline,
-        SurveyResponseInline,
+        ResponseInline,
     ]
 
 
