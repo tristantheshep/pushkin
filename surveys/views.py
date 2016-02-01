@@ -3,7 +3,10 @@ from surveys.models import Survey, Response, Question, Answer, Tag
 from surveys.serializers import SurveySerializer, ResponseSerializer, QuestionSerializer, UserSerializer, AnswerSerializer, TagSerializer
 from surveys.permissions import IsOwner, affirm_survey_ownership
 
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
@@ -123,4 +126,21 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class Register(FormView):
+   template_name = 'register.html'
+   form_class = UserCreationForm
+   success_url='/surveys'
+
+   def form_valid(self, form):
+      #save the new user first
+      form.save()
+      #get the username and password
+      username = self.request.POST['username']
+      password = self.request.POST['password1']
+      #authenticate user then login
+      user = authenticate(username=username, password=password)
+      login(self.request, user)
+      return super(Register, self).form_valid(form)
 

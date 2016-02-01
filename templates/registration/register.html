@@ -16,14 +16,27 @@
             <form action="" role="form" method="post">
               {% csrf_token %}
               {% for field in form %}
-                <div class="clearfix control-group ">
+                <div class="clearfix control-group {% if field.errors %}error{% endif %}">
                   <div class="form-group">
                     <div>
                       <label for='{{field.label_tag}}'>{{field.label}}</label>
-                      <input name='{{ field.html_name }}' maxlength="100" autocapitalize="off" autocorrect="off" class="form-control textinput textInput" id='{{ field.auto_id }}' required>
+                      <input name='{{ field.html_name }}' {% if field.name != 'username' %}type='password'{% endif %}  maxlength="100" autocapitalize="off" autocorrect="off" class="form-control textinput textInput" id='{{ field.auto_id }}' required>
+
+                  {% if field.errors %}
+                    <p class="text-error">
+                      {{ field.errors|striptags }}
+                    </p>
+                  {% endif %}
+
                     </div>
                   </div>
               {% endfor %}
+
+              {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                  <div class="well well-small text-error" style="border: none">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
 
               <div class="form-actions-no-box">
                 <input type="submit" name="submit" value="Create account" class="btn btn-primary form-control" id="submit-id-submit">
