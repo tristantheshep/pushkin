@@ -54,7 +54,7 @@ class Answer(models.Model):
     response = models.ForeignKey(Response, related_name='answers')
     question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField()
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):
         return self.answer_text[:10] + "..."

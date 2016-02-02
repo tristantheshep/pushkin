@@ -7,15 +7,15 @@ from rest_framework import permissions
 
 def affirm_survey_ownership(query):
     """
-    Given a query for a specific survey from a specific survey, check that 
-    the user is the owner of said survey. If not, raise a 403 (forbidden).
+    Decorator to throw 403s if a user tries to access URIs under a survey they
+    do not own.
     """
-    def query_wrapper(obj):
+    def query_wrapper(obj, *args, **kwargs):
         try:
             Survey.objects.get(id=obj.kwargs['sid'], owner=obj.request.user)
         except Survey.DoesNotExist:
             raise PermissionDenied
-        query(obj)
+        return query(obj, *args, **kwargs)
     return query_wrapper
 
 

@@ -2,11 +2,11 @@ from surveys import views
 
 from django.conf.urls import include
 from django.conf.urls import url
-from django.contrib.auth.forms import UserCreationForm
-from django.views.generic.edit import CreateView
+from django.views.generic import RedirectView
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
+    url(r'^$', RedirectView.as_view(url='/surveys/')),
     url(r'^surveys/$', views.SurveyList.as_view()),
     url(r'^surveys/(?P<pk>[0-9]+)/$', views.SurveyDetail.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/questions/$', views.QuestionList.as_view()),
