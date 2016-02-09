@@ -16,6 +16,10 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = ('answer_text', 'tags',)
 
 class ResponseSerializer(serializers.ModelSerializer):
+    answers = serializers.SlugRelatedField(many=True,
+                                           slug_field='answer_text',
+                                           read_only=True)
+
     class Meta:
         model = Response
         fields = ('answers',)
