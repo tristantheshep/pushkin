@@ -31,6 +31,9 @@ class SurveySerializer(serializers.ModelSerializer):
     questions = serializers.SlugRelatedField(many=True,
                                              slug_field='question_text',
                                              read_only=True)
+    tag_options = serializers.SlugRelatedField(many=True,
+                                               slug_field='tag_text',
+                                               read_only=True)
     class Meta:
         model = Survey
         fields = ('pk', 'name', 'questions', 'tag_options', 'owner', 'responses')
