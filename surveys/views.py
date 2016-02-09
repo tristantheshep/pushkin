@@ -25,7 +25,7 @@ def survey_context(func):
                   return survey.responses.all()
 
               Results in /survey/<survey_id>/responses/ returning the 
-              equivalent of  Surveys.get(pk=<survey_id>).responses.all().
+              equivalent of  Surveys.get(id=<survey_id>).responses.all().
 
     The decorator also catches any IndexErrors to raise a 404 if necessary.
 
@@ -39,7 +39,7 @@ def survey_context(func):
         try:
             survey = Survey.objects.get(id=view.kwargs['sid'], owner=view.request.user)
             return func(view, survey)
-        except IndexError:
+        except (IndexError, Survey.DoesNotExist):
             raise Http404
     return query_wrapper
 
@@ -69,9 +69,10 @@ class SurveyList(generics.ListCreateAPIView):
 class SurveyDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SurveySerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'sid'
 
     @survey_context
-    def get_queryset(self):
+    def get_object(self, survey):
         return survey
 
 
@@ -91,10 +92,11 @@ class ResponseList(generics.ListCreateAPIView):
 class ResponseDetail(generics.RetrieveDestroyAPIView):
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'rid'
 
     @survey_context
     def get_object(self, survey):
-        return survey.responses.all()[uri2ix(self, 'pk')]
+        return survey.responses.all()[uri2ix(self, 'rid')]
 
 
 class QuestionList(generics.ListCreateAPIView):
@@ -113,10 +115,11 @@ class QuestionList(generics.ListCreateAPIView):
 class QuestionDetail(generics.RetrieveDestroyAPIView):
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'qid'
 
     @survey_context
     def get_object(self):
-        return survey.questions.all()[uri2ix(self, 'pk')]
+        return survey.questions.all()[uri2ix(self, 'qid')]
 
     # @@@ Question text needs to be put-able only ONCE, by the survey taker
     #     Only the survey owner can add tags
@@ -134,10 +137,11 @@ class AnswerList(generics.ListAPIView):
 class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'aid'
 
     @survey_context
     def get_object(self):
-        return survey.responses.all()[uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'pk')]
+        return survey.responses.all()[uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'aid')]
 
 
 class TagList(generics.ListCreateAPIView):
@@ -157,10 +161,11 @@ class TagList(generics.ListCreateAPIView):
 class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'tid'
 
     @survey_context
     def get_object(self):
-        return survey.tags.all()[uri2ix(self, 'pk')]
+        return survey.tags.all()[uri2ix(self, 'tid')]
 
 
 class UserList(generics.ListAPIView):
