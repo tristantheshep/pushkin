@@ -118,7 +118,7 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
     lookup_field = 'qid'
 
     @survey_context
-    def get_object(self):
+    def get_object(self, survey):
         return survey.questions.all()[uri2ix(self, 'qid')]
 
     # @@@ Question text needs to be put-able only ONCE, by the survey taker
@@ -130,7 +130,7 @@ class AnswerList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     @survey_context
-    def get_queryset(self):
+    def get_queryset(self, survey):
         return survey.responses.all()[uri2ix(self, 'rid')].answers.all()
 
 
@@ -140,7 +140,7 @@ class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'aid'
 
     @survey_context
-    def get_object(self):
+    def get_object(self, survey):
         return survey.responses.all()[uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'aid')]
 
 
@@ -149,7 +149,7 @@ class TagList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     @survey_context
-    def get_queryset(self):
+    def get_queryset(self, survey):
         return survey.tags.all()
 
     @affirm_survey_ownership
@@ -164,7 +164,7 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'tid'
 
     @survey_context
-    def get_object(self):
+    def get_object(self, survey):
         return survey.tags.all()[uri2ix(self, 'tid')]
 
 
