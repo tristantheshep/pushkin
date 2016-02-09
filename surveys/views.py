@@ -150,7 +150,7 @@ class TagList(generics.ListCreateAPIView):
 
     @survey_context
     def get_queryset(self, survey):
-        return survey.tags.all()
+        return survey.tag_options.all()
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
@@ -165,7 +165,7 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
 
     @survey_context
     def get_object(self, survey):
-        return survey.tags.all()[uri2ix(self, 'tid')]
+        return survey.tag_options.all()[uri2ix(self, 'tid')]
 
 
 class UserList(generics.ListAPIView):
