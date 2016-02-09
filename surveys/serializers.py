@@ -8,23 +8,23 @@ import json
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('tag_text', 'id')
+        fields = ('tag_text',)
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ('answer_text', 'tags', 'id')
+        fields = ('answer_text', 'tags',)
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Response
-        fields = ('answers','id')
-        read_only_fields = ('answers','id')
+        fields = ('answers',)
+        read_only_fields = ('answers',)
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ('question_text','id')        
+        fields = ('question_text',)        
 
 class SurveySerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')

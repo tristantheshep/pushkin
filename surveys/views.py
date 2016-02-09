@@ -6,9 +6,13 @@ from surveys.permissions import IsOwner, affirm_survey_ownership
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.http import Http404
 from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
+
+def get_survey(sid, user):
+    return Survey.objects.get(id=sid, owner=user)
 
 
 class SurveyList(generics.ListCreateAPIView):
@@ -38,27 +42,36 @@ class ResponseList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(survey_id=self.kwargs['sid'])
 
-    @affirm_survey_ownership
     def get_queryset(self):
-        return Response.objects.filter(survey_id=self.kwargs['sid'])
+        survey = get_survey(self.kwargs['sid'], self.request.user)
+        return survey.responses.all()
 
 
 class ResponseDetail(generics.RetrieveDestroyAPIView):
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
-    def get_queryset(self):
-        return Response.objects.all() 
+    def get_object(self):
+        sid = self.kwargs['sid']
+        user = self.request.user
+        responseIx = int(self.kwargs['pk']) - 1
+        try:
+            return get_survey(sid, user).responses.all()[responseIx]
+        except IndexError:
+            raise Http404
 
 
 class QuestionList(generics.ListCreateAPIView):
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
-    @affirm_survey_ownership
     def get_queryset(self):
-        return Question.objects.filter(survey_id=self.kwargs['sid'])
+        sid = self.kwargs['sid']
+        user = self.request.user
+        try:
+            return get_survey(sid, user).questions.all()
+        except IndexError:
+            raise Http404
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
@@ -69,9 +82,14 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
-    def get_queryset(self):
-        return Question.objects.all()
+    def get_object(self):
+        sid = self.kwargs['sid']
+        user = self.request.user
+        questionIx = int(self.kwargs['pk']) - 1
+        try:
+            return get_survey(sid, user).questions.all()[questionIx]
+        except IndexError:
+            raise Http404
 
     # @@@ Question text needs to be put-able only ONCE, by the survey taker
     #     Only the survey owner can add tags
@@ -81,27 +99,42 @@ class AnswerList(generics.ListAPIView):
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
-    @affirm_survey_ownership
     def get_queryset(self):
-        return Answer.objects.filter(response_id=self.kwargs['rid'])
+        sid = self.kwargs['sid']
+        responseIx = int(self.kwargs['rid']) - 1
+        user = self.request.user
+        try:
+            return get_survey(sid, user).responses.all()[responseIx].answers.all()
+        except IndexError:
+            raise Http404
 
 
 class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
-    def get_queryset(self):
-        return Answer.objects.filter(response_id=self.kwargs['rid'])
+    def get_object(self):
+        sid = self.kwargs['sid']
+        responseIx = int(self.kwargs['rid']) - 1
+        answerIx = int(self.kwargs['pk']) - 1
+        user = self.request.user
+        try:
+            return get_survey(sid, user).responses.all()[responseIx].answers.all()[answerIx]
+        except IndexError:
+            raise Http404
 
 
 class TagList(generics.ListCreateAPIView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
     def get_queryset(self):
-        return Tag.objects.filter(survey_id=self.kwargs["sid"])
+        sid = self.kwargs['sid']
+        user = self.request.user
+        try:
+            return get_survey(sid, user).tags.all()
+        except IndexError:
+            raise Http404
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
@@ -113,9 +146,14 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
-    def get_queryset(self):
-        return Tag.objects.all()
+    def get_object(self):
+        sid = self.kwargs['sid']
+        tagIx = int(self.kwargs['pk']) - 1
+        user = self.request.user
+        try:
+            return get_survey(sid, user).tags.all()[tagIx]
+        except IndexError:
+            raise Http404
 
 
 class UserList(generics.ListAPIView):
