@@ -20,6 +20,7 @@ class Survey(models.Model):
     name = models.CharField(max_length=101)
     created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('auth.User', related_name='surveys')
+    published = models.BooleanField(default=False)
     
     class Meta:
         ordering = ('created',)
