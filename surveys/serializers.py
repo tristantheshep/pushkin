@@ -27,7 +27,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = ('question_text',)        
 
 class SurveySerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
     questions = serializers.SlugRelatedField(many=True,
                                              slug_field='question_text',
                                              read_only=True)
@@ -36,7 +35,7 @@ class SurveySerializer(serializers.ModelSerializer):
                                                read_only=True)
     class Meta:
         model = Survey
-        fields = ('pk', 'name', 'questions', 'tag_options', 'owner', 'responses')
+        fields = ('pk', 'name', 'questions', 'tag_options', 'response_count')
 
 class UserSerializer(serializers.ModelSerializer):
     surveys = serializers.PrimaryKeyRelatedField(many=True, queryset=Survey.objects.all())

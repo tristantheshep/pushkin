@@ -27,6 +27,10 @@ class Survey(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def response_count(self):
+        return self.responses.count() 
+
 class Question(models.Model):
     """
     An individual question beloning to a survey
