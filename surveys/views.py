@@ -11,8 +11,48 @@ from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
-def get_survey(sid, user):
-    return Survey.objects.get(id=sid, owner=user)
+
+def survey_context(func):
+    """
+    Decorator to provide a shortcut to retrieve the appropriate `Survey` object
+    given the identifier in a URI.
+
+    Example:- to have the ResponseList view provide a queryset of all responses
+              for the survey specified in the URI and the current user:
+    
+              @survey_context
+                  def get_queryset(self, survey):
+                  return survey.responses.all()
+
+              Results in /survey/<survey_id>/responses/ returning the 
+              equivalent of  Surveys.get(pk=<survey_id>).responses.all().
+
+    The decorator also catches any IndexErrors to raise a 404 if necessary.
+
+    Example:- if only 3 responses exist under a survey, then accessing 
+              /survey/<id>/responses/4 will result in an indexerror as
+              ResponseDetail.get_object() will assume survey.responses.all()[3]
+              to exist.
+    """
+
+    def query_wrapper(view):
+        try:
+            survey = Survey.objects.get(id=view.kwargs['sid'], owner=view.request.user)
+            return func(view, survey)
+        except IndexError:
+            raise Http404
+    return query_wrapper
+
+
+def uri2ix(view, key):
+    """
+    Maps an ordinal number string from a URI to an actual index.
+
+    Example:- /surveys/<id>/responses/1 translates to "get the first response
+              for survey with ID <id>", which translates into Python as
+              survey.responses.all()[0]
+    """
+    return int(view.kwargs[key]) - 1
 
 
 class SurveyList(generics.ListCreateAPIView):
@@ -30,8 +70,9 @@ class SurveyDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SurveySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @survey_context
     def get_queryset(self):
-        return Survey.objects.filter(owner=self.request.user)
+        return survey
 
 
 class ResponseList(generics.ListCreateAPIView):
@@ -42,8 +83,8 @@ class ResponseList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(survey_id=self.kwargs['sid'])
 
-    def get_queryset(self):
-        survey = get_survey(self.kwargs['sid'], self.request.user)
+    @survey_context
+    def get_queryset(self, survey):
         return survey.responses.all()
 
 
@@ -51,27 +92,18 @@ class ResponseDetail(generics.RetrieveDestroyAPIView):
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_object(self):
-        sid = self.kwargs['sid']
-        user = self.request.user
-        responseIx = int(self.kwargs['pk']) - 1
-        try:
-            return get_survey(sid, user).responses.all()[responseIx]
-        except IndexError:
-            raise Http404
+    @survey_context
+    def get_object(self, survey):
+        return survey.responses.all()[uri2ix(self, 'pk')]
 
 
 class QuestionList(generics.ListCreateAPIView):
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    
-    def get_queryset(self):
-        sid = self.kwargs['sid']
-        user = self.request.user
-        try:
-            return get_survey(sid, user).questions.all()
-        except IndexError:
-            raise Http404
+
+    @survey_context
+    def get_queryset(self, survey):
+        return survey.questions.all()
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
@@ -82,14 +114,9 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @survey_context
     def get_object(self):
-        sid = self.kwargs['sid']
-        user = self.request.user
-        questionIx = int(self.kwargs['pk']) - 1
-        try:
-            return get_survey(sid, user).questions.all()[questionIx]
-        except IndexError:
-            raise Http404
+        return survey.questions.all()[uri2ix(self, 'pk')]
 
     # @@@ Question text needs to be put-able only ONCE, by the survey taker
     #     Only the survey owner can add tags
@@ -98,43 +125,28 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
 class AnswerList(generics.ListAPIView):
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    
+
+    @survey_context
     def get_queryset(self):
-        sid = self.kwargs['sid']
-        responseIx = int(self.kwargs['rid']) - 1
-        user = self.request.user
-        try:
-            return get_survey(sid, user).responses.all()[responseIx].answers.all()
-        except IndexError:
-            raise Http404
+        return survey.responses.all()[uri2ix(self, 'rid')].answers.all()
 
 
 class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @survey_context
     def get_object(self):
-        sid = self.kwargs['sid']
-        responseIx = int(self.kwargs['rid']) - 1
-        answerIx = int(self.kwargs['pk']) - 1
-        user = self.request.user
-        try:
-            return get_survey(sid, user).responses.all()[responseIx].answers.all()[answerIx]
-        except IndexError:
-            raise Http404
+        return survey.responses.all()[uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'pk')]
 
 
 class TagList(generics.ListCreateAPIView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @survey_context
     def get_queryset(self):
-        sid = self.kwargs['sid']
-        user = self.request.user
-        try:
-            return get_survey(sid, user).tags.all()
-        except IndexError:
-            raise Http404
+        return survey.tags.all()
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
@@ -146,14 +158,9 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @survey_context
     def get_object(self):
-        sid = self.kwargs['sid']
-        tagIx = int(self.kwargs['pk']) - 1
-        user = self.request.user
-        try:
-            return get_survey(sid, user).tags.all()[tagIx]
-        except IndexError:
-            raise Http404
+        return survey.tags.all()[uri2ix(self, 'pk')]
 
 
 class UserList(generics.ListAPIView):
