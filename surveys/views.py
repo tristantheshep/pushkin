@@ -1,6 +1,6 @@
 
 from surveys.models import Survey, Response, Question, Answer, Tag
-from surveys.serializers import SurveySerializer, ResponseSerializer, QuestionSerializer, UserSerializer, AnswerSerializer, TagSerializer
+from surveys.serializers import SurveySerializer, ResponseSerializer, QuestionSerializer, AnswerSerializer, TagSerializer
 from surveys.permissions import affirm_survey_ownership
 
 from django.contrib.auth import authenticate, login
@@ -174,16 +174,6 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     @survey_context
     def get_object(self, survey):
         return survey.tag_options.all()[uri2ix(self, 'tid')]
-
-
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 
 class Register(FormView):

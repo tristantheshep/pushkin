@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from surveys.models import Survey, Response, Question, Answer, Tag
@@ -42,9 +41,3 @@ class SurveySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'questions', 'tag_options', 'response_count',
                   'published')
 
-class UserSerializer(serializers.ModelSerializer):
-    surveys = serializers.PrimaryKeyRelatedField(many=True, queryset=Survey.objects.all())
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'surveys')
