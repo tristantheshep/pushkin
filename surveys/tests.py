@@ -6,8 +6,6 @@ from rest_framework.test import APITestCase
 from rest_framework.test import force_authenticate
 from rest_framework import status
 
-URLs = ['/surveys/','/surveys/1/','/surveys/1/questions/', '/surveys/1/questions/1', '/surveys/1/tags/', '/surveys/1/tags/1', '/surveys/1/responses/', '/surveys/1/responses/1', '/surveys/1/responses/1/answers/', '/surveys/1/responses/1/answers/1']
-
 
 class TestBase(APITestCase):
 
@@ -18,11 +16,14 @@ class TestBase(APITestCase):
             user = User.objects.create(username='user_' + str(i))
             # Add a couple of surveys for each user
             for j in range(2):
-                survey = user.surveys.create(name=user.username + '_survey_' + str(j))
+                survey = user.surveys.create(name=user.username + '_survey_' + \
+                                             str(j))
                 # Add a couple of tags, questions, responses to each survey
                 for k in range(2):
-                    survey.tag_options.create(tag_text=survey.name + "_tag_opt_" + str(k))
-                    survey.questions.create(question_text=survey.name + "_question_" + str(k))
+                    survey.tag_options.create(tag_text=survey.name +           \
+                                              "_tag_opt_" + str(k))
+                    survey.questions.create(question_text=survey.name +        \
+                                            "_question_" + str(k))
                     survey.responses.create()
 
         # Authenticate requests from the first user by default
@@ -44,21 +45,25 @@ class TestBase(APITestCase):
     def users(self):
         return User.objects.all()
 
-    def check_response_code(self, uri, method, exp_response_code):
+    def check_response_code(self, uri, method, exp_response_codes):
         """
         Assert we get a certain response code given a URI and http method
         """
         response_code = method(uri).status_code
-        self.assertEqual(response_code, exp_response_code,
-                         "Expected %s for request '%s %s', got %s"
-                         % (exp_response_code, method.__name__,
-                            uri, response_code))
+        self.assertIn(response_code, exp_response_codes,
+                      "Expected one of %s for request '%s %s', got %s"
+                      % (exp_response_codes, method.__name__,
+                         uri, response_code))
 
-    def check_response_code_not(self, uri, method, not_exp_response_code):
+    def check_response_code_not(self, uri, method, not_exp_response_codes):
+        """
+        Assert we do NOT get a given response for a uri/method
+        """
+
         response_code = method(uri).status_code
-        self.assertNotEqual(response_code, not_exp_response_code,
-                            "Did not expect %s for request '%s %s'"
-                            % (not_exp_response_code, method.__name__, uri))
+        self.assertNotIn(response_code, not_exp_response_codes,
+                         "Did not expect %s for request '%s %s'"
+                         % (response_code, method.__name__, uri))
 
     def _all_user_uris(self, user):
         """
@@ -105,7 +110,7 @@ class AuthTests(TestBase):
 
         for uri in self.user1_uris + self.user2_uris + ['/surveys/']:
             for req in self.requests:
-                self.check_response_code(uri, req, status.HTTP_403_FORBIDDEN)
+                self.check_response_code(uri, req, [status.HTTP_403_FORBIDDEN])
 
     def test_auth_token(self):
         """
@@ -121,22 +126,24 @@ class AuthTests(TestBase):
         """
         for uri in self.user1_uris:
             # Check for explicit 200s when getting
-            self.check_response_code(uri, self.client.get, status.HTTP_200_OK)
+            self.check_response_code(uri, self.client.get, [status.HTTP_200_OK])
 
             # Just check that the other requests aren't 403d - we don't care
             # about anything other than permissions for these auth tests
             for req in self.requests:
                 if req != self.client.delete:
                     self.check_response_code_not(uri, req,
-                                                 status.HTTP_403_FORBIDDEN)
+                                                 [status.HTTP_403_FORBIDDEN])
 
     def test_others_survey_access(self):
         """
         User is met with 403 when trying to access another user's URIs
         """
         for uri in self.user2_uris:
-            for req in self.requests:
-                self.check_response_code(uri, req, status.HTTP_403_FORBIDDEN)
+            for req in [self.client.get]:#self.requests:
+                self.check_response_code(uri, req, 
+                                         [status.HTTP_403_FORBIDDEN,
+                                          status.HTTP_405_METHOD_NOT_ALLOWED])
 
          
 
