@@ -11,7 +11,13 @@ URLs = ['/surveys/','/surveys/1/','/surveys/1/questions/', '/surveys/1/questions
 
 class AuthTests(APITestCase):
     def test_unauthenticated_get(self):
-        for url in URLs:
-            self.assertEqual(self.client.get(url).status_code, status.HTTP_403_FORBIDDEN,
-                             "Unauthenticated get request did not receive 403 for url %s" % url)
+        """
+        HTTP requests are met with 403s if not authenticated on all URLs
+        """
+        requests = [self.client.get, self.client.post, self.client.put, self.client.patch, self.client.delete]
+        for req in requests:
+            for url in URLs:
+                self.assertEqual(req(url).status_code, status.HTTP_403_FORBIDDEN,
+                                 "Unauthenticated request %s/%s did not receive 403" % (req , url))
 
+        
