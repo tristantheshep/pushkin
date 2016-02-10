@@ -140,7 +140,7 @@ class AuthTests(TestBase):
         User is met with 403 when trying to access another user's URIs
         """
         for uri in self.user2_uris:
-            for req in [self.client.get]:#self.requests:
+            for req in [self.client.get]:
                 self.check_response_code(uri, req, 
                                          [status.HTTP_403_FORBIDDEN,
                                           status.HTTP_405_METHOD_NOT_ALLOWED])

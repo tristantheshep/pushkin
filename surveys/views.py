@@ -1,7 +1,7 @@
 
 from surveys.models import Survey, Response, Question, Answer, Tag
 from surveys.serializers import SurveySerializer, ResponseSerializer, QuestionSerializer, UserSerializer, AnswerSerializer, TagSerializer
-from surveys.permissions import IsOwner, affirm_survey_ownership
+from surveys.permissions import affirm_survey_ownership
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm

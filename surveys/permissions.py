@@ -17,14 +17,3 @@ def affirm_survey_ownership(query):
             raise PermissionDenied
         return query(obj, *args, **kwargs)
     return query_wrapper
-
-
-class IsOwner(permissions.BasePermission):
-    """
-    Custom permission to only allow owners of a survey to edit it
-    """
-
-    def has_object_permission(self, request, view, obj):
-        # Write and read permissions are only given to the owner of the survey.
-        return obj.owner == request.user
-
