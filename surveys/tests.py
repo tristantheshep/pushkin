@@ -16,12 +16,17 @@ class TestBase(APITestCase):
         user1 = User.objects.create(username='user1')
         user2 = User.objects.create(username='user2')
 
+        # Add some surveys to user0
+        user0.surveys.create(name='survey0_1')
+        user0.surveys.create(name='survey0_2')
+        user0.surveys.create(name='survey0_3')
+
         # Add some surveys to user1
         user1.surveys.create(name='survey1_1')
         user1.surveys.create(name='survey1_2')
         user1.surveys.create(name='survey1_3')
 
-        # Authenticate requests from user0
+        # Authenticate requests from user0 by default
         self.client.force_authenticate(user=user0)
 
     def tearDown(self):
@@ -51,14 +56,24 @@ class AuthTests(TestBase):
         """
         Users are automatically provided with auth tokens
         """
-        [self.assertNotEqual(u.auth_token.key, "") for u in self.users]
+        users = self.users
+        keys = set(u.auth_token.key for u in users)
+        self.assertEqual(len(keys), len(users), "Some users have the same key")
 
-    def test_get_unowned_survey(self):
+    def test_get_others_survey(self):
         """
         User is met with 403 when trying to access another user's survey
         """
-        # Get a survey from user1 (we are authenticated as user0)
-        survey_id = self.users[1].surveys.all()[0].id
+        # Make sure that we *can* get a survey belonging to user0
+        survey_id = self.users[0].surveys.first().id
+        uri = '/surveys/%s/' % survey_id
+        response = self.client.get(uri).status_code
+        self.assertEqual(response, status.HTTP_200_OK,
+                         "Expected 200 for GET request on %s, got %s" %
+                                                                (uri, response))
+
+        # Try and get a survey from user1
+        survey_id = self.users[1].surveys.first().id
         uri = '/surveys/%s/' % survey_id
         response = self.client.get(uri).status_code
         self.assertEqual(response, status.HTTP_403_FORBIDDEN,
