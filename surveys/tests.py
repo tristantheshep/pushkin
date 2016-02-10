@@ -26,7 +26,7 @@ class TestBase(APITestCase):
                     survey.responses.create()
 
         # Authenticate requests from the first user by default
-        self.client.force_authenticate(user = self.users[0])
+        self.client.force_authenticate(user=self.users[0])
 
         # Generate a list of all URIs for two of the users
         user1, user2, *_ = self.users
@@ -53,6 +53,12 @@ class TestBase(APITestCase):
                          "Expected %s for request '%s %s', got %s"
                          % (exp_response_code, method.__name__,
                             uri, response_code))
+
+    def check_response_code_not(self, uri, method, not_exp_response_code):
+        response_code = method(uri).status_code
+        self.assertNotEqual(response_code, not_exp_response_code,
+                            "Did not expect %s for request '%s %s'"
+                            % (not_exp_response_code, method.__name__, uri))
 
     def _all_user_uris(self, user):
         """
@@ -111,18 +117,26 @@ class AuthTests(TestBase):
 
     def test_own_survey_access(self):
         """
-        User gets 200 when accessing their own URIs
+        User is not 403'd when accessing their own URIs
         """
         for uri in self.user1_uris:
+            # Check for explicit 200s when getting
             self.check_response_code(uri, self.client.get, status.HTTP_200_OK)
+
+            # Just check that the other requests aren't 403d - we don't care
+            # about anything other than permissions for these auth tests
+            for req in self.requests:
+                if req != self.client.delete:
+                    self.check_response_code_not(uri, req,
+                                                 status.HTTP_403_FORBIDDEN)
 
     def test_others_survey_access(self):
         """
         User is met with 403 when trying to access another user's URIs
         """
         for uri in self.user2_uris:
-            self.check_response_code(uri, self.client.get, 
-                                     status.HTTP_403_FORBIDDEN)
+            for req in self.requests:
+                self.check_response_code(uri, req, status.HTTP_403_FORBIDDEN)
 
          
 
