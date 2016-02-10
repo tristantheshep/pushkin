@@ -8,23 +8,22 @@ from rest_framework import status
 
 URLs = ['/surveys/','/surveys/1/','/surveys/1/questions/', '/surveys/1/questions/1', '/surveys/1/tags/', '/surveys/1/tags/1', '/surveys/1/responses/', '/surveys/1/responses/1', '/surveys/1/responses/1/answers/', '/surveys/1/responses/1/answers/1']
 
-class Setup:
 
-    @staticmethod
-    def oneUser(test_func):
-        def setup_func(suite):
-            # Setup
-            user = User.objects.create(username='user1')
+class TestBase(APITestCase):
 
-            # Execute the test
-            test_func(suite, user)
+    def setUp(self):
+        User.objects.create(username='user1')
+        User.objects.create(username='user2')
+        User.objects.create(username='user3')
 
-            # Cleanup
-            user.delete()
-        return setup_func
+    def tearDown(self):
+        self.users().delete()
+
+    def users(self):
+        return User.objects.all()
 
 
-class AuthTests(APITestCase):
+class AuthTests(TestBase):
 
     def test_unauthenticated_get(self):
         """
@@ -36,6 +35,9 @@ class AuthTests(APITestCase):
                 self.assertEqual(req(url).status_code, status.HTTP_403_FORBIDDEN,
                                  "Unauthenticated request %s/%s did not receive 403" % (req , url))
 
-    @Setup.oneUser
-    def test_create_user(self, user):
-        print("Got user %s" % user)
+    def test_auth_token(self):
+        """
+        Users are automatically provided with auth tokens
+        """
+        [self.assertNotEqual(u.auth_token.key, "") for u in self.users()]
+
