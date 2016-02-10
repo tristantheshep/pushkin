@@ -6,6 +6,7 @@ from surveys.permissions import IsOwner, affirm_survey_ownership
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core import exceptions
 from django.http import Http404
 from django.views.generic import FormView
 from rest_framework import generics
@@ -27,7 +28,11 @@ def survey_context(func):
               Results in /survey/<survey_id>/responses/ returning the 
               equivalent of  Surveys.get(id=<survey_id>).responses.all().
 
-    The decorator also catches any IndexErrors to raise a 404 if necessary.
+    403 permission errors are thrown if a user tries to access any survey they
+    do not own (whether it actually exists or not)
+
+    404s are thrown if the survey exists but any object under that survey is
+    not found
 
     Example:- if only 3 responses exist under a survey, then accessing 
               /survey/<id>/responses/4 will result in an indexerror as
@@ -39,8 +44,11 @@ def survey_context(func):
         try:
             survey = Survey.objects.get(id=view.kwargs['sid'], owner=view.request.user)
             return func(view, survey)
-        except (IndexError, Survey.DoesNotExist):
+        except Survey.DoesNotExist:
+            raise exceptions.PermissionDenied
+        except IndexError:
             raise Http404
+
     return query_wrapper
 
 
