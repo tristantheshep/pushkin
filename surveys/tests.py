@@ -100,6 +100,9 @@ class TestBase(APITestCase):
         return uris
 
 class AuthTests(TestBase):
+    """
+    Tests concerning authentication and HTTP codes
+    """
 
     def test_unauthenticated_requests(self):
         """
@@ -146,4 +149,24 @@ class AuthTests(TestBase):
                                           status.HTTP_405_METHOD_NOT_ALLOWED])
 
          
+class DBLogicTests(TestBase):
+    """
+    Concernins pure database logic. These tests are performed directly at the 
+    DB layer and do not involve HTTP requests.
+    """
+
+    def test_automatic_answer_creation(self):
+        """
+        When a response is created, answers objects are automatically create
+        beneath. A response should contain as many answers as there are 
+        questions in the survey.
+        """
+        survey = self.users[0].surveys.create(name='My Survey')
+        questions = ['who', 'what', 'where', 'why', 'when']
+        for question in questions:
+            survey.questions.create(question_text=question)
+
+        resp = survey.responses.create()
+        self.assertEqual(len(questions), resp.answers.count())
+        self.assertTrue(all(a.answer_text == "" for a in resp.answers.all()))
 
