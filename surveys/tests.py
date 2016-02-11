@@ -175,9 +175,10 @@ class DBLogicTests(TestBase):
         """
         Test general survey creation
         """
-        survey = self.user1.surveys.create()
+        user = User.objects.first()
+        survey = user.surveys.create()
         self.assertEqual(survey.name, 'My Survey')
-        self.assertEqual(survey.owner, self.user1)
+        self.assertEqual(survey.owner, user)
         self.assertEqual(survey.questions.count(), 0)
         self.assertEqual(survey.responses.count(), 0)
         self.assertEqual(survey.tag_options.count(), 0)
