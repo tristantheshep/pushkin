@@ -99,6 +99,7 @@ class TestBase(APITestCase):
                 
         return uris
 
+
 class AuthTests(TestBase):
     """
     Tests concerning authentication and HTTP codes
@@ -168,5 +169,20 @@ class DBLogicTests(TestBase):
 
         resp = survey.responses.create()
         self.assertEqual(len(questions), resp.answers.count())
-        self.assertTrue(all(a.answer_text == "" for a in resp.answers.all()))
+        self.assertTrue(all(a.answer_text == '' for a in resp.answers.all()))
+
+    def test_survey_creation(self):
+        """
+        Test general survey creation
+        """
+        survey = self.user1.surveys.create()
+        self.assertEqual(survey.name, 'My Survey')
+        self.assertEqual(survey.owner, self.user1)
+        self.assertEqual(survey.questions.count(), 0)
+        self.assertEqual(survey.responses.count(), 0)
+        self.assertEqual(survey.tag_options.count(), 0)
+        self.assertEqual(survey.published, False)
+
+
+
 

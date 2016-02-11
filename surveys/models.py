@@ -17,7 +17,7 @@ class Survey(models.Model):
     """
     The root of each survey
     """
-    name = models.CharField(max_length=101)
+    name = models.CharField(max_length=100, default='My Survey')
     created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('auth.User', related_name='surveys')
     published = models.BooleanField(default=False)
@@ -34,7 +34,7 @@ class Survey(models.Model):
 
 class Question(models.Model):
     """
-    An individual question beloning to a survey
+    An individual question belonging to a survey
     """
     survey = models.ForeignKey(Survey, related_name='questions')
     question_text = models.TextField()
