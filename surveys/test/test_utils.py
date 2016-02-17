@@ -1,14 +1,29 @@
 
+""" Utilities to help with testing this app """
+
 from django.contrib.auth.models import User
 
 from rest_framework.test import APITestCase
 
 class TestBase(APITestCase):
+    """ A base class that provides functionality of the `APITestCase` class
+    as well as a few other utils specific to Pushkin
+    """
 
     def setUp(self):
+        """
+        Performs a basic multi-user database setup with which to test and
+        authenticates one of the users.
 
+        The resulting database is composed of two users, each with two surveys,
+        each with two tag options, questions, and responses.
+
+        The users are contained in self.users[]. The first user is
+        authenticated.
+        """
         # Create a couple of users
         for i in range(2):
+            # pylint: disable=no-member
             user = User.objects.create(username='user_' + str(i))
             # Add a couple of surveys for each user
             for j in range(2):
@@ -17,29 +32,32 @@ class TestBase(APITestCase):
                 # Add a couple of tags, questions, responses to each survey
                 for k in range(2):
                     survey.tag_options.create(tag_text=survey.name +           \
-                                              "_tag_opt_" + str(k))
+                                              '_tag_opt_' + str(k))
                     survey.questions.create(question_text=survey.name +        \
-                                            "_question_" + str(k))
+                                            '_question_' + str(k))
                     survey.responses.create()
 
         # Authenticate requests from the first user by default
+        # pylint: disable=no-member
         self.client.force_authenticate(user=self.users[0])
 
         # Generate a list of all URIs for two of the users
         user1, user2, *_ = self.users
-        self.user1_uris = self._all_user_uris(user1)
-        self.user2_uris = self._all_user_uris(user2)
+        self.user1_uris = _all_user_uris(user1)
+        self.user2_uris = _all_user_uris(user2)
 
         # Keep a list of requests handy
         self.requests = [self.client.get, self.client.post, self.client.put,
                          self.client.patch, self.client.delete]
 
     def tearDown(self):
+        """ Delete the database created for these tests """
         self.users.delete()
 
     @property
     def users(self):
-        return User.objects.all()
+        """ A property to return all Users in the test database """
+        return User.objects.all() # pylint: disable=no-member
 
     def check_response_code(self, uri, method, exp_response_codes):
         """
@@ -61,37 +79,38 @@ class TestBase(APITestCase):
                          "Did not expect %s for request '%s %s'"
                          % (response_code, method.__name__, uri))
 
-    def _all_user_uris(self, user):
-        """
-        Generate a list of all URIs for a given user, e.g. all surveys,
-        all questions for each survey, etc.
-        """
-        uris = []
-        for survey in user.surveys.all():
-            survey_uri = '/surveys/%s/' % survey.id
-            questions_uri = survey_uri + 'questions/'
-            tags_uri = survey_uri + 'tags/'
-            responses_uri = survey_uri + 'responses/'
 
-            uris.append(survey_uri)
-            uris.append(questions_uri)
-            uris.append(tags_uri)
-            uris.append(responses_uri)
+def _all_user_uris(user):
+    """
+    Generate a list of all URIs for a given user, e.g. all surveys,
+    all questions for each survey, etc.
+    """
+    uris = []
+    for survey in user.surveys.all():
+        survey_uri = '/surveys/%s/' % survey.id
+        questions_uri = survey_uri + 'questions/'
+        tags_uri = survey_uri + 'tags/'
+        responses_uri = survey_uri + 'responses/'
 
-            for ix in range(1, survey.questions.count() + 1):
-                uris.append(questions_uri + '%s/' % ix)
+        uris.append(survey_uri)
+        uris.append(questions_uri)
+        uris.append(tags_uri)
+        uris.append(responses_uri)
 
-            for ix in range(1, survey.tag_options.count() + 1):
-                uris.append(tags_uri + '%s/' % ix)
+        for i in range(1, survey.questions.count() + 1):
+            uris.append(questions_uri + '%s/' % i)
 
-            for ix, response in enumerate(survey.responses.all()):
-                response_uri = responses_uri + '%s/' % (ix+1)
-                answers_uri = response_uri + 'answers/'
-                uris.append(response_uri)
-                uris.append(answers_uri)
+        for i in range(1, survey.tag_options.count() + 1):
+            uris.append(tags_uri + '%s/' % i)
 
-                for jx in range(1, response.answers.count() + 1):
-                    uris.append(answers_uri + '%s/' % jx)
+        for i, response in enumerate(survey.responses.all()):
+            response_uri = responses_uri + '%s/' % (i+1)
+            answers_uri = response_uri + 'answers/'
+            uris.append(response_uri)
+            uris.append(answers_uri)
 
-        return uris
+            for j in range(1, response.answers.count() + 1):
+                uris.append(answers_uri + '%s/' % j)
+
+    return uris
 

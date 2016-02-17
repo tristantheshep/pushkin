@@ -1,8 +1,9 @@
 
-from surveys.models import Survey
+""" Permission helper functions for this app """
 
 from django.core.exceptions import PermissionDenied
-from rest_framework import permissions
+
+from .models import Survey
 
 
 def affirm_survey_ownership(query):
@@ -11,6 +12,7 @@ def affirm_survey_ownership(query):
     do not own.
     """
     def query_wrapper(obj, *args, **kwargs):
+        """ The wrapped query """
         try:
             Survey.objects.get(id=obj.kwargs['sid'], owner=obj.request.user)
         except Survey.DoesNotExist:

@@ -1,4 +1,6 @@
 
+""" Tests for the database layer """
+
 from django.contrib.auth.models import User
 
 from .test_utils import TestBase
@@ -28,7 +30,7 @@ class DBLogicTests(TestBase):
         """
         Test general survey creation
         """
-        user = User.objects.first()
+        user = User.objects.first() # pylint: disable=no-member
         survey = user.surveys.create()
         self.assertEqual(survey.name, 'My Survey')
         self.assertEqual(survey.owner, user)

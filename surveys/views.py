@@ -1,16 +1,18 @@
 
-from surveys.models import Survey, Response, Question, Answer, Tag
-from surveys.serializers import SurveySerializer, ResponseSerializer, QuestionSerializer, AnswerSerializer, TagSerializer
-from surveys.permissions import affirm_survey_ownership
+""" The various views for the survey URLs """
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
 from django.core import exceptions
 from django.http import Http404
 from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
+
+from .models import Survey, Tag
+from .serializers import (SurveySerializer, ResponseSerializer,
+                          QuestionSerializer, AnswerSerializer, TagSerializer)
+from .permissions import affirm_survey_ownership
 
 
 def survey_context(func):
@@ -20,12 +22,12 @@ def survey_context(func):
 
     Example:- to have the ResponseList view provide a queryset of all responses
               for the survey specified in the URI and the current user:
-    
+
               @survey_context
                   def get_queryset(self, survey):
                   return survey.responses.all()
 
-              Results in /survey/<survey_id>/responses/ returning the 
+              Results in /survey/<survey_id>/responses/ returning the
               equivalent of  Surveys.get(id=<survey_id>).responses.all().
 
     403 permission errors are thrown if a user tries to access any survey they
@@ -34,13 +36,14 @@ def survey_context(func):
     404s are thrown if the survey exists but any object under that survey is
     not found
 
-    Example:- if only 3 responses exist under a survey, then accessing 
+    Example:- if only 3 responses exist under a survey, then accessing
               /survey/<id>/responses/4 will result in an indexerror as
               ResponseDetail.get_object() will assume survey.responses.all()[3]
               to exist.
     """
 
     def query_wrapper(view):
+        """ The wrapped query to return """
         try:
             survey = Survey.objects.get(id=view.kwargs['sid'], owner=view.request.user)
             return func(view, survey)
@@ -53,17 +56,24 @@ def survey_context(func):
 
 
 def uri2ix(view, key):
-    """
-    Maps an ordinal number string from a URI to an actual index.
+    """ Maps an ordinal number string from a URI to an actual index
 
-    Example:- /surveys/<id>/responses/1 translates to "get the first response
-              for survey with ID <id>", which translates into Python as
+    Example:- /surveys/<id>/responses/1 translates to 'get the first response
+              for survey with ID <id>', which translates into Python as
               survey.responses.all()[0]
     """
     return int(view.kwargs[key]) - 1
 
 
 class SurveyList(generics.ListCreateAPIView):
+    """ A list of `Survey` objects. The queryset is limited to surveys of which
+    the request maker is the owner
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = SurveySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -74,17 +84,32 @@ class SurveyList(generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
 
+# pylint: disable=too-many-ancestors
 class SurveyDetail(generics.RetrieveUpdateDestroyAPIView):
+    """ The view for an individual survey
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = SurveySerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'sid'
 
     @survey_context
-    def get_object(self, survey):
+    def get_object(self, survey): # pylint: disable=arguments-differ
         return survey
 
 
 class ResponseList(generics.ListCreateAPIView):
+    """ The view for survey's list of responses. The queryset is limited
+    to a specific survey, as identified in the URI
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -93,26 +118,40 @@ class ResponseList(generics.ListCreateAPIView):
         serializer.save(survey_id=self.kwargs['sid'])
 
     @survey_context
-    def get_queryset(self, survey):
+    def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.responses.all()
 
 
 class ResponseDetail(generics.RetrieveDestroyAPIView):
+    """ The view for an individual response
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'rid'
 
     @survey_context
-    def get_object(self, survey):
+    def get_object(self, survey): # pylint: disable=arguments-differ
         return survey.responses.all()[uri2ix(self, 'rid')]
 
 
 class QuestionList(generics.ListCreateAPIView):
+    """ The view for a list of questions. The queryset is limited to a specific
+    survey.
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @survey_context
-    def get_queryset(self, survey):
+    def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.questions.all()
 
     @affirm_survey_ownership
@@ -121,12 +160,18 @@ class QuestionList(generics.ListCreateAPIView):
 
 
 class QuestionDetail(generics.RetrieveDestroyAPIView):
+    """ The view for a single Question
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = QuestionSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'qid'
 
     @survey_context
-    def get_object(self, survey):
+    def get_object(self, survey): # pylint: disable=arguments-differ
         return survey.questions.all()[uri2ix(self, 'qid')]
 
     # @@@ Question text needs to be put-able only ONCE, by the survey taker
@@ -134,61 +179,104 @@ class QuestionDetail(generics.RetrieveDestroyAPIView):
 
 
 class AnswerList(generics.ListAPIView):
+    """ The view for a list of answers (i.e. within an individual response).
+    The queryset is limited to a specific response to a specific survey,
+    as identified in the URI
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @survey_context
-    def get_queryset(self, survey):
+    def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.responses.all()[uri2ix(self, 'rid')].answers.all()
 
 
+# pylint: disable=too-many-ancestors
 class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
+    """ The view for a single answer
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = AnswerSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'aid'
 
     @survey_context
-    def get_object(self, survey):
-        return survey.responses.all()[uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'aid')]
+    def get_object(self, survey): # pylint: disable=arguments-differ
+        return survey.responses.all()[
+            uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'aid')]
 
 
 class TagList(generics.ListCreateAPIView):
+    """ The view for a set of tags. The queryset is limited to a specific
+    Survey (identified by the URI)
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     @survey_context
-    def get_queryset(self, survey):
+    def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.tag_options.all()
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
-        if not Tag.objects.filter(tag_text=serializer.validated_data["tag_text"]).exists():
+        if not Tag.objects.filter(
+                tag_text=serializer.validated_data["tag_text"]).exists():
             serializer.save(survey_id=self.kwargs["sid"])
 
 
+# pylint: disable=too-many-ancestors
 class TagDetail(generics.RetrieveUpdateDestroyAPIView):
+    """ The view for a single tag
+
+    Attributes:
+        serializer_class      The serializer used for the objects in this view
+        permission_classes    The required permissions to access this view
+    """
+
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'tid'
 
     @survey_context
-    def get_object(self, survey):
+    def get_object(self, survey): # pylint: disable=arguments-differ
         return survey.tag_options.all()[uri2ix(self, 'tid')]
 
 
 class Register(FormView):
-   template_name = 'register.html'
-   form_class = UserCreationForm
-   success_url='/surveys'
+    """ The registration page/form.
 
-   def form_valid(self, form):
-      #save the new user first
-      form.save()
-      #get the username and password
-      username = self.request.POST['username']
-      password = self.request.POST['password1']
-      #authenticate user then login
-      user = authenticate(username=username, password=password)
-      login(self.request, user)
-      return super(Register, self).form_valid(form)
+    Attributes:
+        template_name    The HTML template to format this view
+        form_class       The form this page administers
+        success_url      The landing page on successful registration
+    """
+    template_name = 'register.html'
+    form_class = UserCreationForm
+    success_url = '/surveys'
+
+    def form_valid(self, form):
+        """
+        Do the needful when a valid form is submitted.
+        """
+        # Save the new user first
+        form.save()
+        # Get the username and password
+        username = self.request.POST['username']
+        password = self.request.POST['password1']
+        # Authenticate user then login
+        user = authenticate(username=username, password=password)
+        login(self.request, user)
+        return super(Register, self).form_valid(form)
 

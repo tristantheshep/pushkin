@@ -1,4 +1,6 @@
 
+""" Tests for authentication, permissions, and security """
+
 from rest_framework import status
 
 from .test_utils import TestBase
@@ -14,7 +16,7 @@ class AuthTests(TestBase):
         All HTTP requests on all URIs are met with 403s if not authenticated
         """
         # Remove authentication from client
-        self.client.force_authenticate()
+        self.client.force_authenticate() # pylint: disable=no-member
 
         for uri in self.user1_uris + self.user2_uris + ['/surveys/']:
             for req in self.requests:
