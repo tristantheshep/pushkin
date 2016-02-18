@@ -4,7 +4,6 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
 from django.core import exceptions
-from django.http import Http404
 from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
@@ -12,7 +11,6 @@ from rest_framework import permissions
 from .models import Survey, SurveyPublicationError, Tag
 from .serializers import (SurveySerializer, ResponseSerializer,
                           QuestionSerializer, AnswerSerializer, TagSerializer)
-from .permissions import affirm_survey_ownership
 
 
 def survey_context(func):
@@ -49,8 +47,6 @@ def survey_context(func):
             return func(view, survey)
         except Survey.DoesNotExist:
             raise exceptions.PermissionDenied
-        except IndexError:
-            raise Http404
 
     return query_wrapper
 
@@ -113,12 +109,12 @@ class ResponseList(generics.ListCreateAPIView):
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @affirm_survey_ownership
     def perform_create(self, serializer):
         try:
             serializer.save(survey_id=self.kwargs['sid'])
         except SurveyPublicationError:
             raise exceptions.PermissionDenied
+
     @survey_context
     def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.responses.all()
@@ -156,7 +152,6 @@ class QuestionList(generics.ListCreateAPIView):
     def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.questions.all()
 
-    @affirm_survey_ownership
     def perform_create(self, serializer):
         serializer.save(survey_id=self.kwargs['sid'])
 
@@ -232,7 +227,6 @@ class TagList(generics.ListCreateAPIView):
     def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.tag_options.all()
 
-    @affirm_survey_ownership
     def perform_create(self, serializer):
         if not Tag.objects.filter(
                 tag_text=serializer.validated_data["tag_text"]).exists():

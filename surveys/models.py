@@ -49,9 +49,6 @@ class Survey(models.Model):
         """
         ordering = ('created',)
 
-    def __str__(self):
-        return self.name
-
     def publish(self):
         """ Alters a survey's state to published """
         self.published = True
@@ -74,9 +71,6 @@ class Question(models.Model):
     survey = models.ForeignKey(Survey, related_name='questions')
     question_text = models.TextField()
 
-    def __str__(self):
-        return self.question_text
-
 
 class Tag(models.Model):
     """ A tag that the survey owner can use to tag responses in the survey
@@ -87,9 +81,6 @@ class Tag(models.Model):
     """
     tag_text = models.CharField(max_length=MAX_TAG_LENGTH)
     survey = models.ForeignKey(Survey, related_name='tag_options')
-
-    def __str__(self):
-        return self.tag_text
 
 
 class Response(models.Model):
@@ -128,5 +119,3 @@ class Answer(models.Model):
     answer_text = models.TextField()
     tags = models.ManyToManyField(Tag, blank=True)
 
-    def __str__(self):
-        return self.answer_text[:10] + "..."

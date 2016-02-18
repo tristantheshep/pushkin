@@ -1,10 +1,11 @@
 
 """ Tests for authentication, permissions, and security """
 
+from django.contrib.auth.models import User
 from rest_framework import status
 
 from .test_utils import TestBase
-
+from ..views import Register
 
 class AuthTests(TestBase):
     """ Tests concerning authentication and HTTP codes """
@@ -23,7 +24,7 @@ class AuthTests(TestBase):
         """ Users are automatically provided with auth tokens """
         users = self.users
         keys = set(u.auth_token.key for u in users)
-        self.assertEqual(len(keys), len(users), "Some users have the same key")
+        self.assertEqual(len(keys), len(users), 'Some users have the same key')
 
     def test_own_survey_access(self):
         """ User is not 403'd when accessing their own URIs """
@@ -45,4 +46,30 @@ class AuthTests(TestBase):
                 self.check_response_code(uri, req,
                                          [status.HTTP_403_FORBIDDEN,
                                           status.HTTP_405_METHOD_NOT_ALLOWED])
+
+
+class RegistrationTests(TestBase):
+
+    def test_registration(self):
+        """ A user can be created """
+        reg_data = {'username' : 'humphrey', 'password1' : 'dogzrule',
+                    'password2' : 'dogzrule'}
+        uri = '/register/'
+        # Expected a 302 (redirection) on successful registration
+        self.check_response_code(uri, self.client.post, [status.HTTP_302_FOUND],
+                                 reg_data)
+        # The following will fail if the user was not created
+        User.objects.get(username='humphrey')
+
+    def test_registration_mismatched_passwords(self):
+        """ A user is not created if the passwords in the form do not match """
+        reg_data = {'username' : 'humphrey', 'password1' : 'dogzrule',
+                    'password2' : 'catzrule'}
+        uri = '/register/'
+        # Expect a 200 for invalid form submission
+        self.check_response_code(uri, self.client.post, [status.HTTP_200_OK],
+                                 reg_data)
+        # The user should not exist
+        with self.assertRaises(User.DoesNotExist):
+            User.objects.get(username='humphrey')
 
