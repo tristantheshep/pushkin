@@ -63,11 +63,11 @@ class TestBase(APITestCase):
         """ A property to return all Users in the test database """
         return User.objects.all() # pylint: disable=no-member
 
-    def check_response_code(self, uri, method, exp_response_codes):
+    def check_response_code(self, uri, method, exp_response_codes, body=None):
         """
         Assert we get a certain response code given a URI and http method
         """
-        response_code = method(uri).status_code
+        response_code = method(uri, body).status_code
         self.assertIn(response_code, exp_response_codes,
                       "Expected one of %s for request '%s %s', got %s"
                       % (exp_response_codes, method.__name__,

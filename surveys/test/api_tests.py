@@ -19,3 +19,16 @@ class APITests(TestBase):
         survey.publish()
         self.check_response_code('/surveys/%s/responses/' % survey.id,
                                  self.client.post, [status.HTTP_201_CREATED])
+
+    def test_publication_by_api(self):
+        """ A survey is published by the appropriate data message, and
+        requests to unpublish are ignored.
+         """
+        survey = self.users[0].surveys.create()
+        self.assertEqual(survey.published, False)
+        self.check_response_code('/surveys/%s/' % survey.id,
+                                 self.client.patch, [status.HTTP_200_OK],
+                                 {"published":True})
+        survey.refresh_from_db()
+        self.assertEqual(survey.published, True)
+
