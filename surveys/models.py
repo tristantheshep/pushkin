@@ -5,9 +5,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import HttpResponseForbidden
 from rest_framework.authtoken.models import Token
-
-
 
 
 MAX_TAG_LENGTH = 100
@@ -22,6 +21,16 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     """ Automatically add an auth token to a newly create user """
     if created:
         Token.objects.create(user=instance)
+
+
+class SurveyPublicationError(Exception):
+    """ Exception thrown when actions are forbidden given the state of the 
+    survey, i.e. responding to an unpublished survey or editing a question
+    following publication
+    """
+
+    def __init__(self, message):
+        self.message = message
 
 
 class Survey(models.Model):
@@ -47,6 +56,11 @@ class Survey(models.Model):
     def __str__(self):
         return self.name
 
+    def publish(self):
+        """ Alters a survey's state to published """
+        self.published = True
+        self.save()
+
     @property
     def response_count(self):
         """ A `property` to export the number of responses, user when
@@ -67,6 +81,7 @@ class Question(models.Model):
     def __str__(self):
         return self.question_text
 
+
 class Tag(models.Model):
     """ A tag that the survey owner can use to tag responses in the survey
 
@@ -80,6 +95,7 @@ class Tag(models.Model):
     def __str__(self):
         return self.tag_text
 
+
 class Response(models.Model):
     """ A series of answers representing a response to the survey
 
@@ -92,9 +108,14 @@ class Response(models.Model):
         """ When a response is created, automatically populate it with N empty
         `Answer` objects, where N is the number of `Question`s in the survey.
         """
-        super(Response, self).save(*args, **kwargs) # pylint: disable=no-member
-        for question in self.survey.questions.all():
-            self.answers.create(question_id=question.id)
+        if self.survey.published:
+            # pylint: disable=no-member
+            super(Response, self).save(*args, **kwargs)
+            for question in self.survey.questions.all():
+                self.answers.create(question_id=question.id)
+        else:
+            raise SurveyPublicationError('This survey has not been published')
+
 
 class Answer(models.Model):
     """ A single answer to a question that composes the survey

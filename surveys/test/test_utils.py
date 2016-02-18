@@ -29,6 +29,7 @@ class TestBase(APITestCase):
             for j in range(2):
                 survey = user.surveys.create(name=user.username + '_survey_' + \
                                              str(j))
+                survey.publish()
                 # Add a couple of tags, questions, responses to each survey
                 for k in range(2):
                     survey.tag_options.create(tag_text=survey.name +           \
@@ -36,6 +37,7 @@ class TestBase(APITestCase):
                     survey.questions.create(question_text=survey.name +        \
                                             '_question_' + str(k))
                     survey.responses.create()
+
 
         # Authenticate requests from the first user by default
         # pylint: disable=no-member
@@ -49,6 +51,8 @@ class TestBase(APITestCase):
         # Keep a list of requests handy
         self.requests = [self.client.get, self.client.post, self.client.put,
                          self.client.patch, self.client.delete]
+
+        from surveys.models import Survey
 
     def tearDown(self):
         """ Delete the database created for these tests """

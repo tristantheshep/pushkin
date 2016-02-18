@@ -15,30 +15,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Answer',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
                 ('answer_text', models.TextField()),
             ],
         ),
         migrations.CreateModel(
             name='Question',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
                 ('question_text', models.TextField()),
             ],
         ),
         migrations.CreateModel(
             name='Response',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
             ],
         ),
         migrations.CreateModel(
             name='Survey',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
-                ('name', models.CharField(max_length=101)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
+                ('name', models.CharField(default='My Survey', max_length=100)),
                 ('created', models.DateTimeField(auto_now_add=True)),
-                ('owner', models.ForeignKey(to=settings.AUTH_USER_MODEL, related_name='surveys')),
+                ('_published', models.BooleanField(default=False)),
+                ('owner', models.ForeignKey(related_name='surveys', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ('created',),
@@ -47,34 +48,34 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Tag',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, verbose_name='ID', auto_created=True)),
-                ('tag_text', models.CharField(max_length=20)),
-                ('survey', models.ForeignKey(to='surveys.Survey', related_name='tag_options')),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
+                ('tag_text', models.CharField(max_length=100)),
+                ('survey', models.ForeignKey(related_name='tag_options', to='surveys.Survey')),
             ],
         ),
         migrations.AddField(
             model_name='response',
             name='survey',
-            field=models.ForeignKey(to='surveys.Survey', related_name='responses'),
+            field=models.ForeignKey(related_name='responses', to='surveys.Survey'),
         ),
         migrations.AddField(
             model_name='question',
             name='survey',
-            field=models.ForeignKey(to='surveys.Survey', related_name='questions'),
+            field=models.ForeignKey(related_name='questions', to='surveys.Survey'),
         ),
         migrations.AddField(
             model_name='answer',
             name='question',
-            field=models.ForeignKey(to='surveys.Question', related_name='answers'),
+            field=models.ForeignKey(related_name='answers', to='surveys.Question'),
         ),
         migrations.AddField(
             model_name='answer',
             name='response',
-            field=models.ForeignKey(to='surveys.Response', related_name='answers'),
+            field=models.ForeignKey(related_name='answers', to='surveys.Response'),
         ),
         migrations.AddField(
             model_name='answer',
             name='tags',
-            field=models.ManyToManyField(to='surveys.Tag'),
+            field=models.ManyToManyField(blank=True, to='surveys.Tag'),
         ),
     ]

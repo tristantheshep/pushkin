@@ -87,6 +87,13 @@ class SurveySerializer(serializers.ModelSerializer):
     tag_options = serializers.SlugRelatedField(many=True,
                                                slug_field='tag_text',
                                                read_only=True)
+
+    def validate(self, data):
+        """ Prevent the `published` variable being set to False """ 
+        if 'published' in data and data.get('published') == False:
+            del data['published']
+        return data
+
     class Meta:
         model = Survey
         fields = ('id', 'name', 'questions', 'tag_options', 'response_count',

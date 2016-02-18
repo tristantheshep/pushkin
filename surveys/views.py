@@ -9,7 +9,7 @@ from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
-from .models import Survey, Tag
+from .models import Survey, SurveyPublicationError, Tag
 from .serializers import (SurveySerializer, ResponseSerializer,
                           QuestionSerializer, AnswerSerializer, TagSerializer)
 from .permissions import affirm_survey_ownership

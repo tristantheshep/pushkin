@@ -4,6 +4,7 @@
 from django.contrib.auth.models import User
 
 from .test_utils import TestBase
+from ..models import SurveyPublicationError
 
 class DBLogicTests(TestBase):
     """
@@ -12,9 +13,8 @@ class DBLogicTests(TestBase):
     """
 
     def test_automatic_answer_creation(self):
-        """
-        When a response is created, answers objects are automatically create
-        beneath. A response should contain as many answers as there are
+        """ When a response is created, answers objects are automatically
+        created beneath. A response should contain as many answers as there are
         questions in the survey.
         """
         survey = self.users[0].surveys.create(name='My Survey')
@@ -22,15 +22,14 @@ class DBLogicTests(TestBase):
         for question in questions:
             survey.questions.create(question_text=question)
 
+        survey.publish()
         resp = survey.responses.create()
         self.assertEqual(len(questions), resp.answers.count())
         self.assertTrue(all(a.answer_text == '' for a in resp.answers.all()))
 
     def test_survey_creation(self):
-        """
-        Test general survey creation
-        """
-        user = User.objects.first() # pylint: disable=no-member
+        """ Test general survey creation """
+        user = self.users[0]
         survey = user.surveys.create()
         self.assertEqual(survey.name, 'My Survey')
         self.assertEqual(survey.owner, user)
@@ -38,3 +37,19 @@ class DBLogicTests(TestBase):
         self.assertEqual(survey.responses.count(), 0)
         self.assertEqual(survey.tag_options.count(), 0)
         self.assertEqual(survey.published, False)
+
+    def test_publishing(self):
+        """ The survey's `publish()` method has the desired effect """
+        survey = self.users[0].surveys.create()
+        survey.publish()
+        self.assertTrue(survey.published)
+
+    def test_unpublished_response(self):
+        """ A survey cannot have responses added before being published """
+        survey = self.users[0].surveys.create()
+        self.assertRaises(SurveyPublicationError, survey.responses.create)
+        survey.publish()
+        response = survey.responses.create()
+
+    def test_published_question_alteration(self):
+        pass#self.assertRaises()
