@@ -89,8 +89,8 @@ class SurveySerializer(serializers.ModelSerializer):
                                                read_only=True)
 
     def validate(self, data):
-        """ Prevent the `published` variable being set to False """ 
-        if 'published' in data and data.get('published') == False:
+        """ Prevent the `published` variable being set to False """
+        if 'published' in data and not data.get('published'):
             del data['published']
         return data
 

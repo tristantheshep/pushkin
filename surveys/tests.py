@@ -5,7 +5,7 @@
 # pylint: disable=unused-import
 from .test.auth_tests import AuthTests
 from .test.db_tests import DBLogicTests
-
+from .test.api_tests import APITests
 
 
 

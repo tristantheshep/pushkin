@@ -115,8 +115,10 @@ class ResponseList(generics.ListCreateAPIView):
 
     @affirm_survey_ownership
     def perform_create(self, serializer):
-        serializer.save(survey_id=self.kwargs['sid'])
-
+        try:
+            serializer.save(survey_id=self.kwargs['sid'])
+        except SurveyPublicationError:
+            raise exceptions.PermissionDenied
     @survey_context
     def get_queryset(self, survey): # pylint: disable=arguments-differ
         return survey.responses.all()

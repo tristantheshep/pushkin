@@ -5,7 +5,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import HttpResponseForbidden
 from rest_framework.authtoken.models import Token
 
 
@@ -24,13 +23,10 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 
 class SurveyPublicationError(Exception):
-    """ Exception thrown when actions are forbidden given the state of the 
+    """ Exception thrown when actions are forbidden given the state of the
     survey, i.e. responding to an unpublished survey or editing a question
     following publication
     """
-
-    def __init__(self, message):
-        self.message = message
 
 
 class Survey(models.Model):
@@ -59,7 +55,7 @@ class Survey(models.Model):
     def publish(self):
         """ Alters a survey's state to published """
         self.published = True
-        self.save()
+        self.save()# pylint: disable=no-member
 
     @property
     def response_count(self):

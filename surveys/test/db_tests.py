@@ -1,8 +1,6 @@
 
 """ Tests for the database layer """
 
-from django.contrib.auth.models import User
-
 from .test_utils import TestBase
 from ..models import SurveyPublicationError
 
@@ -49,7 +47,4 @@ class DBLogicTests(TestBase):
         survey = self.users[0].surveys.create()
         self.assertRaises(SurveyPublicationError, survey.responses.create)
         survey.publish()
-        response = survey.responses.create()
-
-    def test_published_question_alteration(self):
-        pass#self.assertRaises()
+        survey.responses.create()
