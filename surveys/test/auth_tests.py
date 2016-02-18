@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from rest_framework import status
 
 from .test_utils import TestBase
-from ..views import Register
 
 class AuthTests(TestBase):
     """ Tests concerning authentication and HTTP codes """
@@ -49,6 +48,7 @@ class AuthTests(TestBase):
 
 
 class RegistrationTests(TestBase):
+    """ Tests for the registration form """
 
     def test_registration(self):
         """ A user can be created """
@@ -59,9 +59,9 @@ class RegistrationTests(TestBase):
         self.check_response_code(uri, self.client.post, [status.HTTP_302_FOUND],
                                  reg_data)
         # The following will fail if the user was not created
-        User.objects.get(username='humphrey')
+        User.objects.get(username='humphrey') # pylint: disable=no-member
 
-    def test_registration_mismatched_passwords(self):
+    def test_mismatched_passwords(self):
         """ A user is not created if the passwords in the form do not match """
         reg_data = {'username' : 'humphrey', 'password1' : 'dogzrule',
                     'password2' : 'catzrule'}
@@ -71,5 +71,4 @@ class RegistrationTests(TestBase):
                                  reg_data)
         # The user should not exist
         with self.assertRaises(User.DoesNotExist):
-            User.objects.get(username='humphrey')
-
+            User.objects.get(username='humphrey')# pylint: disable=no-member
