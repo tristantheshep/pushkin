@@ -1,9 +1,9 @@
 {% extends "admin/base.html" %}
 
-{% block title %}{{ title }} | Pushkin {% endblock %}
+{% block title %}{{ title }} | {{ pushkin_site_name }} {% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">Pushkin Administration</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ pushkin_site_name }} Administration</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
