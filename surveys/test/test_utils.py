@@ -27,17 +27,19 @@ class TestBase(APITestCase):
             user = User.objects.create(username='user_' + str(i))
             # Add a couple of surveys for each user
             for j in range(2):
-                survey = user.surveys.create(name=user.username + '_survey_' + \
-                                             str(j))
+                survey = user.surveys.create(
+                    name=user.username + '_survey_' + str(j))
                 survey.publish()
                 # Add a couple of tags, questions, responses to each survey
                 for k in range(2):
-                    survey.tag_options.create(tag_text=survey.name +           \
-                                              '_tag_opt_' + str(k))
-                    survey.questions.create(question_text=survey.name +        \
-                                            '_question_' + str(k))
-                    survey.responses.create()
-
+                    survey.tag_options.create(
+                        tag_text=survey.name + '_tag_opt_' + str(k))
+                    question = survey.questions.create(
+                        question_text=survey.name + '_question_' + str(k))
+                    response = survey.responses.create()
+                    response.answers.create(
+                        question=question,
+                        answer_text=survey.name +'_answer_' + str(k))
 
         # Authenticate requests from the first user by default
         # pylint: disable=no-member

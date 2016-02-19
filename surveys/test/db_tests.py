@@ -10,21 +10,6 @@ class DBLogicTests(TestBase):
     DB layer and do not involve HTTP requests.
     """
 
-    def test_automatic_answer_creation(self):
-        """ When a response is created, answers objects are automatically
-        created beneath. A response should contain as many answers as there are
-        questions in the survey.
-        """
-        survey = self.users[0].surveys.create(name='My Survey')
-        questions = ['who', 'what', 'where', 'why', 'when']
-        for question in questions:
-            survey.questions.create(question_text=question)
-
-        survey.publish()
-        resp = survey.responses.create()
-        self.assertEqual(len(questions), resp.answers.count())
-        self.assertTrue(all(a.answer_text == '' for a in resp.answers.all()))
-
     def test_survey_creation(self):
         """ Test general survey creation """
         user = self.users[0]
@@ -48,12 +33,3 @@ class DBLogicTests(TestBase):
         self.assertRaises(DBError, survey.responses.create)
         survey.publish()
         survey.responses.create()
-
-    def test_editing_submitted_answer(self):
-        """ An answer cannot be edited following submission """
-        survey = self.users[0].surveys.first()
-        response = survey.responses.first()
-        answer = response.answers.first()
-        response.submitted = True
-        answer.answer_text = 'foo'
-        self.assertRaises(DBError, answer.save)

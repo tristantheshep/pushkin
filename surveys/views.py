@@ -9,7 +9,7 @@ from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
-from .models import Survey, DBError, Tag
+from .models import DBError, Survey, Tag
 from .serializers import (SurveySerializer, ResponseSerializer,
                           QuestionSerializer, AnswerSerializer, TagSerializer)
 
@@ -113,8 +113,29 @@ class ResponseList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
+        """ Overrides Response creation from validated data. This allows for
+        creations from data that will look like:
+
+        { 'answer_strings' : [<answer_string>, <answer_string>, ...] }
+
+        To automatically create a `Response` with the appropriate 'Answer'
+        objects in the `Response.answers` field.
+        """
         try:
-            serializer.save(survey_id=self.kwargs['sid'])
+            # Cut answer_strings from the validated data, as there is no such
+            # field on the `Response` object.
+            answer_texts = serializer.validated_data['answer_strings']
+            del serializer.validated_data['answer_strings']
+
+            # Create the empty response
+            response = serializer.save(survey_id=self.kwargs['sid'])
+
+            # Create a new `Answer` under this response for each answer_string
+            # and question
+            questions = response.survey.questions.all()
+            for question, answer_text in zip(questions, answer_texts):
+                response.answers.create(answer_text=answer_text,
+                                        question=question)
         except DBError:
             raise exceptions.PermissionDenied
 

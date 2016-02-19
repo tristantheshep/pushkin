@@ -37,21 +37,15 @@ class ResponseSerializer(serializers.ModelSerializer):
 
     Responses are serialized as:
         {
-            'answers' : [<answer_text>, <answer_text>, ...]
+            'answer_strings' : [<answer_text>, <answer_text>, ...]
         }
     """
-    # Specify the answers as a SlugRelatedField to provide a 'shortcut' i.e.
-    # when a Response is serialized, it simply specifies a list of strings
-    # rather than a list of entire `AnswerSerializers`, each containing the
-    # redundant "answer_text" key.
-    answers = serializers.SlugRelatedField(many=True,
-                                           slug_field='answer_text',
-                                           read_only=True)
+
+    answer_strings = serializers.ListField(child=serializers.CharField())
 
     class Meta:
         model = Response
-        fields = ('answers','submitted')
-        read_only_fields = ('answers',)
+        fields = ('answer_strings',)
 
 class QuestionSerializer(serializers.ModelSerializer):
     """ Serialization definition for the the `Question` objects
