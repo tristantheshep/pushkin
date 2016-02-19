@@ -51,6 +51,45 @@ The usual set of requests are available on each path (get/post on lists, get/put
   * A survey has to be in the published state before responses can be created, after which the survey questions cannot be modified. A survey cannot be unpublished.
   * Note that the default Django behavior for object access in views is to use the PK. We only key off of PK in the survey case - after than, we use an ordinal number i.e. /surveys/1/questions/4 gives you the 4th question for survey 1.
 
+#### Example useage ####
+
+Adding a response to a survey
+
+    POST /surveys/<id>/responses {'answer_strings':['answer1', 'answer2']}
+
+Getting the response (assuming it was the first added)
+
+    GET /surveys/<id>/responses/1
+
+    => {'answer_strings' : ['answer1', 'answer2']}
+
+Getting the Nth answer to the Mth question:
+
+    GET /surveys/<id>/responses/N/answers/M
+
+    => {'answer_text' : 'answerM'}
+
+Getting general details on a survey:
+
+    GET /surveys/<id>
+
+    =>    {
+              "id": 2,
+              "name": "My Survey",
+              "questions": [
+                  "What?",
+                  "Why?",
+                  ...
+              ],
+              "tag_options": [
+                  "Boring answer",
+                  "Interesting answer",
+                  ...
+              ],
+              "response_count": 100,
+              "published": true
+          }
+
 ### Serialization ###
 
 Details of the various serialized objects:
