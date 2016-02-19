@@ -71,10 +71,10 @@ Getting the Nth answer to the Mth question:
 
 Getting general details on a survey:
 
-    GET /surveys/<id>
+    GET /surveys/123
 
     =>    {
-              "id": 2,
+              "id": 123,
               "name": "My Survey",
               "questions": [
                   "What?",
