@@ -4,6 +4,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
 from django.core import exceptions
+from django.http import Http404
 from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
@@ -47,6 +48,8 @@ def survey_context(func):
             return func(view, survey)
         except Survey.DoesNotExist:
             raise exceptions.PermissionDenied
+        except IndexError:
+            raise Http404
 
     return query_wrapper
 

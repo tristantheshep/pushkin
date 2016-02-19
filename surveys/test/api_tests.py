@@ -90,3 +90,11 @@ class APITests(TestBase):
         survey.refresh_from_db()
         self.assertEqual(survey.published, True)
 
+    def test_404_nonexistent_objects(self):
+        """ Accessing an object that does not exist under a survey that
+        does exist returns a 404, e.g. trying to get the 5th question under
+        a survey that only has 4 questions
+        """
+        survey = self.users[0].surveys.first()
+        self.check_response_code('/surveys/%s/questions/999/' % survey.id,
+                                 self.client.get, [status.HTTP_404_NOT_FOUND])
