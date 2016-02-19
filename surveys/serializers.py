@@ -50,7 +50,7 @@ class ResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Response
-        fields = ('answers',)
+        fields = ('answers','submitted')
         read_only_fields = ('answers',)
 
 class QuestionSerializer(serializers.ModelSerializer):

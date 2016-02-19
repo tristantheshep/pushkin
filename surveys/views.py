@@ -9,7 +9,7 @@ from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
-from .models import Survey, SurveyPublicationError, Tag
+from .models import Survey, DBError, Tag
 from .serializers import (SurveySerializer, ResponseSerializer,
                           QuestionSerializer, AnswerSerializer, TagSerializer)
 
@@ -115,7 +115,7 @@ class ResponseList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         try:
             serializer.save(survey_id=self.kwargs['sid'])
-        except SurveyPublicationError:
+        except DBError:
             raise exceptions.PermissionDenied
 
     @survey_context

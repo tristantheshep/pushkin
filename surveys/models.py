@@ -22,12 +22,11 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
-class SurveyPublicationError(Exception):
-    """ Exception thrown when actions are forbidden given the state of the
-    survey, i.e. responding to an unpublished survey or editing a question
-    following publication
+class DBError(Exception):
+    """ Exception thrown to indicate an attempted action has been rejected at
+    the DB layer, i.e. responding to an unpublished survey or editing a
+    question after publication, or changing an already-submitted answer
     """
-
 
 class Survey(models.Model):
     """ The root object of each survey
@@ -61,6 +60,7 @@ class Survey(models.Model):
         """
         return self.responses.count()
 
+
 class Question(models.Model):
     """ An individual question belonging to a survey
 
@@ -87,9 +87,11 @@ class Response(models.Model):
     """ A series of answers representing a response to the survey
 
     Attributes:
-         survey      The `Survey` object to which this response belongs
+        survey       The `Survey` object to which this response belongs
+        submitted    Indicates this response has been finalized and submitted
     """
     survey = models.ForeignKey(Survey, related_name='responses')
+    submitted = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """ When a response is created, automatically populate it with N empty
@@ -101,7 +103,7 @@ class Response(models.Model):
             for question in self.survey.questions.all():
                 self.answers.create(question_id=question.id)
         else:
-            raise SurveyPublicationError('This survey has not been published')
+            raise DBError('This survey has not been published')
 
 
 class Answer(models.Model):
@@ -118,4 +120,14 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField()
     tags = models.ManyToManyField(Tag, blank=True)
+
+    def save(self, *args, **kwargs):
+        """ Make sure the response as a whole has not been submitted before
+        editing an answer
+        """
+        if not self.response.submitted:
+            # pylint: disable=no-member
+            super(Answer, self).save(*args, **kwargs)
+        else:
+            raise DBError('This response has already been submitted')
 
