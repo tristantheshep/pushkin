@@ -125,3 +125,7 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name='answers')
     answer_text = models.TextField()
     tags = models.ManyToManyField(Tag, blank=True)
+
+    @property
+    def tag_strings(self):
+        return [tag.tag_text for tag in self.tags.all()]

@@ -27,10 +27,12 @@ class AnswerSerializer(serializers.ModelSerializer):
             'tags' : [<tag_text>, <tag_text>, ...]
         }
     """
+    tag_strings = serializers.ListField(child=serializers.CharField())
 
     class Meta:
         model = Answer
-        fields = ('answer_text', 'tags',)
+        read_only_fields = ('answer_text',)
+        fields = ('answer_text', 'tag_strings',)
 
 class ResponseSerializer(serializers.ModelSerializer):
     """ Serialization definition for the the `Response` objects

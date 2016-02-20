@@ -124,8 +124,7 @@ class ResponseList(generics.ListCreateAPIView):
         try:
             # Cut answer_strings from the validated data, as there is no such
             # field on the `Response` object.
-            answer_texts = serializer.validated_data['answer_strings']
-            del serializer.validated_data['answer_strings']
+            answer_texts = serializer.validated_data.pop('answer_strings', [])
 
             # Create the empty response
             response = serializer.save(survey_id=self.kwargs['sid'])
@@ -137,6 +136,7 @@ class ResponseList(generics.ListCreateAPIView):
                 response.answers.create(answer_text=answer_text,
                                         question=question)
         except DBError:
+            # The survey hasn't been published yet
             raise exceptions.PermissionDenied
 
     @survey_context
@@ -234,6 +234,13 @@ class AnswerDetail(generics.RetrieveUpdateDestroyAPIView):
         return survey.responses.all()[
             uri2ix(self, 'rid')].answers.all()[uri2ix(self, 'aid')]
 
+    def perform_update(self, serializer):
+        tag_strings = serializer.validated_data.pop('tag_strings', [])
+        answer = serializer.save()
+        tags = Tag.objects.filter(tag_text__in=tag_strings)
+        for tag in tags:
+            answer.tags.add(tag)
+        answer.save()
 
 class TagList(generics.ListCreateAPIView):
     """ The view for a set of tags. The queryset is limited to a specific
