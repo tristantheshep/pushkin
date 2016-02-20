@@ -71,6 +71,16 @@ Getting the Nth answer to the Mth question:
 
     => {'answer_text' : 'answerM'}
 
+Adding a tag to the survey:
+
+    POST /surveys/<id>/tags {'tag_text' : <tag_text>}
+
+Tagging an answer in the survey with the new tag. Any tags that aren't already
+added to the survey are ignored here (crucially - see motivation). A sensible
+front end could easily only allow tagging with existing tags here:
+
+    PATCH /surveys/<id>/responses/N/answers/M/ {'tag_strings' : <tag_text>}
+
 Getting general details on a survey:
 
     GET /surveys/123
