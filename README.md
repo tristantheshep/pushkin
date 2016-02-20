@@ -14,10 +14,12 @@ My friend was tasked with reading and tagging ~18,000 open-text responses to a s
 
  Most of the above can be easily solved with a simple and clean REST API and database, which is what I wish to achieve here.
 
-### Django Details ###
+### Packages in use ###
 
  * Django 1.8.5
- * Underpinned by a neat REST API (using djangorestframework 3.3.2)
+ * djangorestframework 3.3.2
+ * psycopg2 (PostgreSQL python wrapper)
+ * Optional - pylint and httpie for testing
 
 ### Roadmap ###
 
