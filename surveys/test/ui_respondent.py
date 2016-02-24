@@ -1,5 +1,7 @@
 
-""" """
+""" Tests for the respondent UI """
+
+import requests
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -7,7 +9,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.firefox.webdriver import WebDriver
 
 class UIRespondentTests(StaticLiveServerTestCase):
-    """ """
+    """ Tests for the UI presented to the survey respondents. These include
+    page rendering, response submission, and the CSRF protection of the page"""
 
     def setUp(self):
         """ Set up for the UI/respondent test case """
@@ -85,4 +88,11 @@ class UIRespondentTests(StaticLiveServerTestCase):
            self.assertEqual(answer.answer_text,
                             'Answer to "%s"' % question.question_text)
 
-
+    def test_csrf_protection(self):
+        """ POST requests made outside of the form are rejected """
+        response = requests.post('%s%s%s/' % (self.live_server_url,
+                                              '/respond/',
+                                              self.survey.id))
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("this site requires a CSRF cookie when submitting forms",
+                      response.text)
