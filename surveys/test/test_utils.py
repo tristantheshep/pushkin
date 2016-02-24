@@ -21,6 +21,7 @@ class TestBase(APITestCase):
         The users are contained in self.users[]. The first user is
         authenticated.
         """
+
         # Create a couple of users
         for i in range(2):
             # pylint: disable=no-member

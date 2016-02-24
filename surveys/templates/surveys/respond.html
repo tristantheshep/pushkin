@@ -5,15 +5,15 @@
 <h1> {{ survey.name }} - submit response </h1>
 <p> Created by {{survey.owner.username}} </p>
 
-<form action='{% url 'submit' survey.id %}' method='post'>
+<form name=survey-respond-{{survey.id}} action='{% url 'submit' survey.id %}' method='post'>
     {% csrf_token %}
     {% for question in survey.questions.all %}
         <p>{{ forloop.counter }}. {{question.question_text}}</p>
         {# forloop.counter is one-based, convert to zero #}
-        <input type='text' name={{ forloop.counter|add:"-1" }} />
+        <input type='text' id={{question.id}} name={{ forloop.counter|add:"-1" }} />
     {% endfor %}
     <br><br>
-    <input type='submit' value='Submit' />
+    <input name='submit-response' type='submit' value='Submit' />
 </form>
 
 </body><html>
