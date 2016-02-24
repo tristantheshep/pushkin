@@ -27,9 +27,12 @@ urlpatterns = [
     url(r'^surveys/(?P<sid>[0-9]+)/tags/$', views.TagList.as_view()),
     url(r'^surveys/(?P<sid>[0-9]+)/tags/(?P<tid>[0-9]+)/$',
         views.TagDetail.as_view()),
-    url('^register/', views.Register.as_view(), name='register'),
+    url(r'^register/', views.Register.as_view(), name='register'),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
+    url(r'^respond/(?P<sid>[0-9]+)/$', views.respond, name='respond'),
+    url(r'^submit/(?P<sid>[0-9]+)/$', views.submit, name='submit'),
+    url(r'^thankyou/$', views.thankyou, name='thankyou'),
 ]
 
 # Add on suffix pattern options, e.g. '.json' to each URL

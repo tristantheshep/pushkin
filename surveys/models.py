@@ -128,4 +128,7 @@ class Answer(models.Model):
 
     @property
     def tag_strings(self):
+        """ Returns the `tag_text` fields in a list for all tags associated
+        with this answer
+        """
         return [tag.tag_text for tag in self.tags.all()]

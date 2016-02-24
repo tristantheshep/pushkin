@@ -43,11 +43,12 @@ class ResponseSerializer(serializers.ModelSerializer):
         }
     """
 
-    answer_strings = serializers.ListField(child=serializers.CharField())
+    answers = serializers.SlugRelatedField(slug_field='answer_text',
+                                           many=True, read_only=True)
 
     class Meta:
         model = Response
-        fields = ('answer_strings',)
+        fields = ('answers',)
 
 class QuestionSerializer(serializers.ModelSerializer):
     """ Serialization definition for the the `Question` objects

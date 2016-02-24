@@ -4,15 +4,47 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
 from django.core import exceptions
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.views.generic import FormView
 from rest_framework import generics
 from rest_framework import permissions
 
-from .models import DBError, Survey, Tag
+from .models import Survey, Tag
 from .serializers import (SurveySerializer, ResponseSerializer,
                           QuestionSerializer, AnswerSerializer, TagSerializer)
 
+
+################################################################################
+# UI/response submission handlers
+#
+
+def respond(request, sid):
+    """ Renders the landing page for a user taking a survey """
+    survey = get_object_or_404(Survey, id=sid)
+    return render(request, 'surveys/respond.html', {'survey':survey})
+
+def submit(request, sid):
+    """ Processes the response to the survey as rendered by `respond()` """
+    response_values = request.POST
+    survey = get_object_or_404(Survey, id=sid)
+    questions = survey.questions.all()
+    response = survey.responses.create()
+    for question in questions:
+        response.answers.create(
+            question=question,
+            answer_text=response_values[question.question_text])
+
+    return HttpResponseRedirect('/thankyou/')
+
+def thankyou(request):
+    """ Thank-you page after submitting a survey response """
+    return render(request, 'surveys/thankyou.html')
+
+
+################################################################################
+# Backend/RESTful handlers
+#
 
 def survey_context(func):
     """
@@ -100,7 +132,7 @@ class SurveyDetail(generics.RetrieveUpdateDestroyAPIView):
         return survey
 
 
-class ResponseList(generics.ListCreateAPIView):
+class ResponseList(generics.ListAPIView):
     """ The view for survey's list of responses. The queryset is limited
     to a specific survey, as identified in the URI
 
@@ -111,33 +143,6 @@ class ResponseList(generics.ListCreateAPIView):
 
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticated,)
-
-    def perform_create(self, serializer):
-        """ Overrides Response creation from validated data. This allows for
-        creations from data that will look like:
-
-        { 'answer_strings' : [<answer_string>, <answer_string>, ...] }
-
-        To automatically create a `Response` with the appropriate 'Answer'
-        objects in the `Response.answers` field.
-        """
-        try:
-            # Cut answer_strings from the validated data, as there is no such
-            # field on the `Response` object.
-            answer_texts = serializer.validated_data.pop('answer_strings', [])
-
-            # Create the empty response
-            response = serializer.save(survey_id=self.kwargs['sid'])
-
-            # Create a new `Answer` under this response for each answer_string
-            # and question
-            questions = response.survey.questions.all()
-            for question, answer_text in zip(questions, answer_texts):
-                response.answers.create(answer_text=answer_text,
-                                        question=question)
-        except DBError:
-            # The survey hasn't been published yet
-            raise exceptions.PermissionDenied
 
     @survey_context
     def get_queryset(self, survey): # pylint: disable=arguments-differ

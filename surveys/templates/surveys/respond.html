@@ -1,0 +1,18 @@
+{% load rest_framework  %}
+
+<html><body>
+
+<h1> {{ survey.name }} - submit response </h1>
+<p> Created by {{survey.owner.username}} </p>
+
+<form action='{% url 'submit' survey.id %}' method='post'>
+    {% csrf_token %}
+    {% for question in survey.questions.all %}
+        <p>{{ forloop.counter }}. {{question.question_text}}</p>
+        <input type='text' name={{ question.question_text }} />
+    {% endfor %}
+    <br><br>
+    <input type='submit' value='Submit' />
+</form>
+
+</body><html>

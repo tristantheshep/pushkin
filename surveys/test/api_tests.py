@@ -66,18 +66,6 @@ class APITests(TestBase):
                             for survey in serializer.validated_data}
         self.assertEqual(db_names, serialized_names)
 
-
-    def test_unpublished_response(self):
-        """ A 403 is returned when responding to an unpublished survey """
-        survey = self.users[0].surveys.create()
-        self.check_response_code('/surveys/%s/responses/' % survey.id,
-                                 self.client.post, [status.HTTP_403_FORBIDDEN])
-
-        # Publish the survey and check that we now get a 201
-        survey.publish()
-        self.check_response_code('/surveys/%s/responses/' % survey.id,
-                                 self.client.post, [status.HTTP_201_CREATED])
-
     def test_publication_by_api(self):
         """ A survey is published by the appropriate data message, and
         requests to unpublish are ignored.
@@ -98,30 +86,3 @@ class APITests(TestBase):
         survey = self.users[0].surveys.first()
         self.check_response_code('/surveys/%s/questions/999/' % survey.id,
                                  self.client.get, [status.HTTP_404_NOT_FOUND])
-
-    def test_response_creation(self):
-        """ When a respose is posted, the answer objects are automatically
-        created from the text in the request
-        """
-        # Create a survey with 3 questions
-        survey = self.users[0].surveys.create()
-        survey.questions.create(question_text='What?')
-        survey.questions.create(question_text='Who?')
-        survey.questions.create(question_text='When?')
-        survey.publish()
-
-        # Post a response with answers
-        response_data = {'answer_strings' : ['That', 'Them', 'Then']}
-        self.check_response_code('/surveys/%s/responses/' % survey.id,
-                                 self.client.post, [status.HTTP_201_CREATED],
-                                 response_data)
-
-        self.assertEqual(survey.questions.count(),
-                         survey.responses.first().answers.count())
-        question_texts = [question.question_text
-                          for question in survey.questions.all()]
-        self.assertEqual(list(zip(question_texts,
-                                  survey.responses.first().answer_strings)),
-                         [('What?', 'That'),
-                          ('Who?', 'Them'),
-                          ('When?', 'Then')])
