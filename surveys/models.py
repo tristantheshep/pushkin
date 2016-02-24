@@ -91,15 +91,6 @@ class Response(models.Model):
     """
     survey = models.ForeignKey(Survey, related_name='responses')
 
-    @property
-    def answer_strings(self):
-        """ A property to mimic a list of answer texts for this response.
-        Used so we can specify the `answer_strings` attribute in the
-        corresponding serializer and have it seamlessly output just the
-        text
-         """
-        return [answer.answer_text for answer in self.answers.all()]
-
     def save(self, *args, **kwargs):
         """ Saves the response if the survey is published, otherwise raises
         a DBError
