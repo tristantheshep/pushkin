@@ -28,12 +28,11 @@ def submit(request, sid):
     """ Processes the response to the survey as rendered by `respond()` """
     response_values = request.POST
     survey = get_object_or_404(Survey, id=sid)
-    questions = survey.questions.all()
     response = survey.responses.create()
-    for question in questions:
+    for question_ix, question in enumerate(survey.questions.all()):
         response.answers.create(
             question=question,
-            answer_text=response_values[question.question_text])
+            answer_text=response_values[str(question_ix)])
 
     return HttpResponseRedirect('/thankyou/')
 

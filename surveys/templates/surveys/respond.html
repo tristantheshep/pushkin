@@ -9,7 +9,8 @@
     {% csrf_token %}
     {% for question in survey.questions.all %}
         <p>{{ forloop.counter }}. {{question.question_text}}</p>
-        <input type='text' name={{ question.question_text }} />
+        {# forloop.counter is one-based, convert to zero #}
+        <input type='text' name={{ forloop.counter|add:"-1" }} />
     {% endfor %}
     <br><br>
     <input type='submit' value='Submit' />
