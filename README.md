@@ -21,6 +21,14 @@ My friend was tasked with reading and tagging ~18,000 open-text responses to a s
  * psycopg2 (PostgreSQL python wrapper)
  * Optional - pylint and httpie for testing
 
+### The UI ###
+
+The site has two UIs, one for the survey owner and one for respondents.
+
+The meat of the project is the RESTful survey owner's API, designed to provide a straight-forward and logical interface to create, manage, and analyze a survey.
+
+The respondents' API is a simple page displaying the questions of the survey alongside text boxes to write their answers and a button to submit.
+
 ### Roadmap ###
 
 Short term:
