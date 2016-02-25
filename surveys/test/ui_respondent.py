@@ -89,10 +89,18 @@ class UIRespondentTests(StaticLiveServerTestCase):
                             'Answer to "%s"' % question.question_text)
 
     def test_csrf_protection(self):
-        """ POST requests made outside of the form are rejected """
+        """ The form has a CSRF token and POST requests made outside of the
+        form are rejected
+        """
+        # Make sure the CSRF token exists
+        try:
+            self.web_driver.find_element_by_name('csrfmiddlewaretoken')
+        except NoSuchElementException:
+            self.fail('No CSRF token in response form')
+
+        # Check that a 403 is returned when trying to submit a response not via
+        # the form
         response = requests.post('%s%s%s/' % (self.live_server_url,
                                               '/respond/',
                                               self.survey.id))
         self.assertEqual(response.status_code, 403)
-        self.assertIn("this site requires a CSRF cookie when submitting forms",
-                      response.text)
