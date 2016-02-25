@@ -19,7 +19,7 @@ My friend was tasked with reading and tagging ~18,000 open-text responses to a s
  * Django 1.8.5
  * djangorestframework 3.3.2
  * psycopg2 (PostgreSQL python wrapper)
- * Optional - pylint and httpie for testing
+ * Optional - httpie, selenium, and pylint for testing
 
 ### The UI ###
 
@@ -38,7 +38,8 @@ Short term:
 Long term:
 
  * Add questions that allow responses other than open text (choices, x/10, ordering)
- * Friendly front end
+ * Apache
+ * Better looking front end
 
 ### The API ###
 
@@ -63,11 +64,7 @@ The usual set of requests are available on each path (get/post on lists, get/put
 
 #### Example useage ####
 
-Adding a response to a survey
-
-    POST /surveys/<id>/responses {'answer_strings':['answer1', 'answer2']}
-
-Getting the response (assuming it was the first added)
+Getting the Nth response to the survey
 
     GET /surveys/<id>/responses/1
 
