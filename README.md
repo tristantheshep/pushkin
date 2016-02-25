@@ -119,7 +119,7 @@ Details of the various serialized objects:
 
 ### Authentication ###
 
-Designed and unit-tested to provide survey owner access only, except for response postings (see API details below). The website includes login and registration pages (probably the beef of my front end work so far here) and supports token authentication.
+Any unauthenticated user can respond to a survey (via the /respond/<id> form - CSRF protected). Only the survey owner/creator has access to the RESTful back-end.
 
 ### Database design ###
 
