@@ -14,6 +14,7 @@ The maximum length of each tag text
 """
 
 
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 # pylint: disable=unused-argument
 def create_auth_token(sender, instance=None, created=False, **kwargs):
